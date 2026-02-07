@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useMemo, useState } from "react";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./AppRoutes";
 
-function App() {
-  const [count, setCount] = useState(0)
+/**
+ * IMPORTANT:
+ * - Replace uid with your real authenticated user id from Firebase/AuthContext.
+ * - computedCash should come from your transactions aggregator.
+ * - manualCash is your override input (what you said: manual overrides computed).
+ */
+export default function App() {
+  // TEMP placeholders (replace with real auth + computed values)
+  const uid = "demo-user";
+
+  const [manualCash, setManualCash] = useState(200000);
+  const computedCash = 0;
+
+  const coachInput = useMemo(() => ({
+    paydayDay: 28,
+    dailyFloor: 12000,
+    manualCash,
+    computedCash,
+    totalLoanOwed: 500000,
+    betBudgetMonthly: 50000,
+    betSpentMonthly: 0,
+    workoutsLast7Days: 0,
+    entryLastAt: null,
+    breakfastLoggedToday: false,
+    lastShoppingAt: null,
+    lastHomeAuditAt: null
+  }), [manualCash]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <BrowserRouter>
+      <div style={{ padding: 16, borderBottom: "1px solid #2a3550" }}>
+        <b>SapaTracker</b>{" "}
+        <span style={{ opacity: 0.7, marginLeft: 8 }}>
+          Manual Cash Override:
+        </span>{" "}
+        <input
+          style={{ marginLeft: 8 }}
+          type="number"
+          value={manualCash}
+          onChange={(e) => setManualCash(Number(e.target.value))}
+        />
+        <span style={{ opacity: 0.7, marginLeft: 8 }}>
+          (overrides computed)
+        </span>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
 
-export default App
+      <AppRoutes uid={uid} coachInput={coachInput} />
+    </BrowserRouter>
+  );
+}

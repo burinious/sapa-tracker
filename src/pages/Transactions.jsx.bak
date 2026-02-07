@@ -1,0 +1,35 @@
+﻿import { useAuth } from "../context/AuthContext";
+import { getFinance } from "../utils/localFinance";
+import "../styles/app.css";
+
+export default function Transactions() {
+  const { user } = useAuth();
+  const finance = getFinance(user.uid);
+  const tx = finance.transactions || [];
+
+  return (
+    <div style={{ display:"grid", gap:12 }}>
+      <div className="row" style={{ justifyContent:"space-between" }}>
+        <h2 style={{ margin:0 }}>Transactions</h2>
+        <div className="small">{tx.length} total</div>
+      </div>
+
+      {tx.length === 0 ? (
+        <div className="card"><div className="small">No transactions yet.</div></div>
+      ) : (
+        tx.map((t) => (
+          <div key={t.id} className="card">
+            <div className="row" style={{ justifyContent:"space-between" }}>
+              <b>{t.type === "income" ? "Income" : "Expense"}</b>
+              <b>{Number(t.amount).toLocaleString("en-NG")}</b>
+            </div>
+            <div className="small" style={{ marginTop:6 }}>
+              {(t.categoryName || "Uncategorized")}  {new Date(t.dateISO).toLocaleString()}
+            </div>
+            {t.note ? <div style={{ marginTop:8 }}>{t.note}</div> : null}
+          </div>
+        ))
+      )}
+    </div>
+  );
+}

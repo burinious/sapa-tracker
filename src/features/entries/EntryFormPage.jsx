@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import { addEntry, updateEntry } from "../../services/entries";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { db } from "../../firebase/firebase";
 
-export default function EntryFormPage({ uid }) {
+export default function EntryFormPage() {
+  const { user } = useAuth();
+  const uid = user?.uid || "";
   const { id } = useParams();
   const isEdit = Boolean(id);
   const nav = useNavigate();
@@ -69,7 +72,7 @@ export default function EntryFormPage({ uid }) {
           <textarea value={form.text} onChange={e=>setForm(f=>({ ...f, text: e.target.value }))} rows={8} placeholder="drop the gist..." />
         </label>
         <button type="submit">{isEdit ? "Update" : "Save"}</button>
-        <a href="/entries">Back</a>
+        <Link to="/entries">Back</Link>
       </form>
     </div>
   );

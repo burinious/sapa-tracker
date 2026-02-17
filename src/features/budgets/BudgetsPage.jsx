@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { getMonthlyBudget, monthKey, upsertMonthlyBudget } from "../../services/budgets";
+import { getMonthlyBudgetLocal } from "../../utils/localBudgets";
+import LocalOnlyNotice from "../../components/LocalOnlyNotice";
 
-export default function BudgetsPage({ uid }) {
+export default function BudgetsPage() {
+  const { user } = useAuth();
+  const uid = user?.uid || "";
   const month = monthKey();
   const [dailyFloor, setDailyFloor] = useState(12000);
   const [betBudget, setBetBudget] = useState(50000);
   const [salaryExpected, setSalaryExpected] = useState(200000);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     if (!uid) return;
@@ -16,6 +22,12 @@ export default function BudgetsPage({ uid }) {
       setSalaryExpected(Number(d.salaryExpected ?? 200000));
     }).catch(console.error);
   }, [uid, month]);
+
+  useEffect(() => {
+    if (!uid) return;
+    const local = getMonthlyBudgetLocal(uid, month);
+    setPendingCount(local && local.syncStatus !== "synced" ? 1 : 0);
+  }, [uid, month, dailyFloor, betBudget, salaryExpected]);
 
   async function save() {
     if (!uid) return;
@@ -32,6 +44,7 @@ export default function BudgetsPage({ uid }) {
   return (
     <div style={{ padding: 16 }}>
       <h2>Budgets ({month})</h2>
+      <LocalOnlyNotice pendingCount={pendingCount} />
       <div style={{ display:"grid", gap: 10, maxWidth: 520 }}>
         <label>Daily Floor (₦/day)
           <input type="number" value={dailyFloor} onChange={e=>setDailyFloor(e.target.value)} />

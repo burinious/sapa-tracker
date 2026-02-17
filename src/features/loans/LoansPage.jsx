@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 import { addLoan, getActiveLoans } from "../../services/loans";
+import { getLoans } from "../../utils/localLoans";
+import LocalOnlyNotice from "../../components/LocalOnlyNotice";
 
-export default function LoansPage({ uid }) {
+export default function LoansPage() {
+  const { user } = useAuth();
+  const uid = user?.uid || "";
   const [loans, setLoans] = useState([]);
   const [principal, setPrincipal] = useState(500000);
+  const [pendingCount, setPendingCount] = useState(0);
 
   async function refresh() {
     if (!uid) return;
@@ -12,6 +18,12 @@ export default function LoansPage({ uid }) {
   }
 
   useEffect(() => { refresh().catch(console.error); }, [uid]);
+
+  useEffect(() => {
+    if (!uid) return;
+    const local = getLoans(uid);
+    setPendingCount(local.filter((l) => l.syncStatus !== "synced").length);
+  }, [uid, loans]);
 
   async function onAdd() {
     if (!uid) return;
@@ -24,6 +36,7 @@ export default function LoansPage({ uid }) {
   return (
     <div style={{ padding: 16 }}>
       <h2>Loans</h2>
+      <LocalOnlyNotice pendingCount={pendingCount} />
       <p>Total owed: <b>₦{Math.round(totalOwed).toLocaleString()}</b></p>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 12 }}>

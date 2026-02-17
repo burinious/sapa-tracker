@@ -1,54 +1,63 @@
-import React, { useMemo, useState } from "react";
-import { BrowserRouter } from "react-router-dom";
-import AppRoutes from "./AppRoutes";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-/**
- * IMPORTANT:
- * - Replace uid with your real authenticated user id from Firebase/AuthContext.
- * - computedCash should come from your transactions aggregator.
- * - manualCash is your override input (what you said: manual overrides computed).
- */
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
+import AddTransaction from "./pages/AddTransaction";
+import HouseShopping from "./pages/HouseShopping";
+import Subscriptions from "./pages/Subscriptions";
+import EditProfile from "./pages/EditProfile";
+import SapaAI from "./pages/SapaAI";
+
+import CoachPage from "./features/coach/CoachPage";
+import EntriesPage from "./features/entries/EntriesPage";
+import EntryFormPage from "./features/entries/EntryFormPage";
+import LoansPage from "./features/loans/LoansPage";
+import BudgetsPage from "./features/budgets/BudgetsPage";
+
 export default function App() {
-  // TEMP placeholders (replace with real auth + computed values)
-  const uid = "demo-user";
-
-  const [manualCash, setManualCash] = useState(200000);
-  const computedCash = 0;
-
-  const coachInput = useMemo(() => ({
-    paydayDay: 28,
-    dailyFloor: 12000,
-    manualCash,
-    computedCash,
-    totalLoanOwed: 500000,
-    betBudgetMonthly: 50000,
-    betSpentMonthly: 0,
-    workoutsLast7Days: 0,
-    entryLastAt: null,
-    breakfastLoggedToday: false,
-    lastShoppingAt: null,
-    lastHomeAuditAt: null
-  }), [manualCash]);
-
   return (
-    <BrowserRouter>
-      <div style={{ padding: 16, borderBottom: "1px solid #2a3550" }}>
-        <b>SapaTracker</b>{" "}
-        <span style={{ opacity: 0.7, marginLeft: 8 }}>
-          Manual Cash Override:
-        </span>{" "}
-        <input
-          style={{ marginLeft: 8 }}
-          type="number"
-          value={manualCash}
-          onChange={(e) => setManualCash(Number(e.target.value))}
-        />
-        <span style={{ opacity: 0.7, marginLeft: 8 }}>
-          (overrides computed)
-        </span>
-      </div>
+    <AuthProvider>
+      <Router>
+        <ToastContainer position="top-right" autoClose={2500} />
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
-      <AppRoutes uid={uid} coachInput={coachInput} />
-    </BrowserRouter>
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/coach" element={<CoachPage />} />
+
+            <Route path="/add-transaction" element={<AddTransaction />} />
+            <Route path="/transactions" element={<Transactions />} />
+
+            <Route path="/entries" element={<EntriesPage />} />
+            <Route path="/entries/new" element={<EntryFormPage />} />
+            <Route path="/entries/:id/edit" element={<EntryFormPage />} />
+
+            <Route path="/loans" element={<LoansPage />} />
+            <Route path="/budgets" element={<BudgetsPage />} />
+
+            <Route path="/house-shopping" element={<HouseShopping />} />
+            <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/ai" element={<SapaAI />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
+          </Route>
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }

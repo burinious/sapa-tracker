@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
+import SyncStatusPanel from "../components/SyncStatusPanel";
 import "../styles/app.css";
 
 import { ensureUserProfile, upsertUserProfile } from "../services/profileService";
@@ -431,6 +432,8 @@ export default function EditProfile() {
             {busy ? "Saving..." : "Save Profile"}
           </button>
         </div>
+
+        <SyncStatusPanel />
       </div>
     </div>
   );

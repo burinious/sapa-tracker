@@ -9,6 +9,7 @@ import AINotesCarousel from "../components/dashboard/AINotesCarousel";
 import SnapshotCards from "../components/dashboard/SnapshotCards";
 import SpendingInsights from "../components/dashboard/SpendingInsights";
 import RecentTransactions from "../components/dashboard/RecentTransactions";
+import SidebarModulesPanel from "../components/dashboard/SidebarModulesPanel";
 
 import useDashboardData from "../hooks/useDashboardData";
 import useSapaAiNotes from "../hooks/useSapaAiNotes";
@@ -111,6 +112,13 @@ export default function Dashboard() {
         {/* MID */}
         <div className="st-mid">
           <QuickAddRow />
+          <SidebarModulesPanel
+            uid={uid}
+            computed={computed}
+            transactions={transactions}
+            subscriptions={subscriptions}
+            aiNotesCount={mergedNotes?.length || 0}
+          />
 
           {error ? (
             <div className="st-card">

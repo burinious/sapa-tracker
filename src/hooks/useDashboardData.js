@@ -12,6 +12,14 @@ import {
 } from "firebase/firestore";
 
 import { db } from "../firebase/firebase";
+import {
+  getCachedTransactions,
+  getCachedSubscriptions,
+  getCachedNotes,
+  mergeTransactionsFromRemote,
+  mergeSubscriptionsFromRemote,
+  mergeNotesFromRemote
+} from "../utils/localDashboardCache";
 
 function safeNum(x) {
   const n = Number(x);
@@ -56,6 +64,15 @@ export default function useDashboardData(uid, opts = {}) {
 
     setLoading(true);
     setError("");
+    const useCacheIfEmpty = () => {
+      const cachedTx = getCachedTransactions(uid);
+      const cachedSubs = getCachedSubscriptions(uid);
+      const cachedNotes = getCachedNotes(uid);
+      if (cachedTx.length) setTransactions(cachedTx);
+      if (cachedSubs.length) setSubscriptions(cachedSubs);
+      if (cachedNotes.length) setNotes(cachedNotes);
+    };
+    useCacheIfEmpty();
 
     // --- Transactions: realtime, by createdAt (reliable)
     const txRef = collection(db, `users/${uid}/transactions`);
@@ -65,11 +82,13 @@ export default function useDashboardData(uid, opts = {}) {
       txQ,
       (snap) => {
         const tx = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        mergeTransactionsFromRemote(uid, tx);
         setTransactions(tx);
         setLoading(false);
       },
       (e) => {
         setError(e?.message || "Failed to load transactions");
+        useCacheIfEmpty();
         setLoading(false);
       }
     );
@@ -81,6 +100,7 @@ export default function useDashboardData(uid, opts = {}) {
       subQ,
       (snap) => {
         const subs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        mergeSubscriptionsFromRemote(uid, subs);
         setSubscriptions(subs);
       },
       (e) => setError(e?.message || "Failed to load subscriptions")
@@ -93,6 +113,7 @@ export default function useDashboardData(uid, opts = {}) {
       notesQ,
       (snap) => {
         const nts = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        mergeNotesFromRemote(uid, nts);
         setNotes(nts);
       },
       (e) => setError(e?.message || "Failed to load notes")

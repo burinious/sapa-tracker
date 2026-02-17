@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
 import { DEFAULT_PROFILE, DEFAULT_BILLS_NG, mergeDefaults } from "../utils/profileSchema";
+import { syncLocalToFirestore } from "../services/syncLocalToFirestore";
 
 const AuthContext = createContext(null);
 
@@ -70,6 +71,30 @@ export function AuthProvider({ children }) {
       unsubAuth();
     };
   }, []);
+
+  // Background sync: local -> Firestore when online
+  useEffect(() => {
+    if (!user?.uid) return;
+    let running = false;
+
+    const runSync = async () => {
+      if (running) return;
+      if (typeof navigator !== "undefined" && !navigator.onLine) return;
+      try {
+        running = true;
+        await syncLocalToFirestore(user.uid);
+      } catch (err) {
+        console.warn("Local sync failed:", err?.message || err);
+      } finally {
+        running = false;
+      }
+    };
+
+    runSync();
+    const onOnline = () => runSync();
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [user?.uid]);
 
   // Auth actions (keep simple)
   const register = async (email, password, displayName) => {

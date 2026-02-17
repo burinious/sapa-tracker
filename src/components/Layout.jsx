@@ -58,8 +58,12 @@ export default function Layout() {
 
         <nav className="nav">
           <NavItem to="/dashboard" label="Dashboard" onClick={() => setOpen(false)} />
+          <NavItem to="/coach" label="Coach" onClick={() => setOpen(false)} />
           <NavItem to="/add-transaction" label="Add Transaction" onClick={() => setOpen(false)} />
           <NavItem to="/transactions" label="Transactions" onClick={() => setOpen(false)} />
+          <NavItem to="/entries" label="Entries" onClick={() => setOpen(false)} />
+          <NavItem to="/loans" label="Loans" onClick={() => setOpen(false)} />
+          <NavItem to="/budgets" label="Budgets" onClick={() => setOpen(false)} />
           <NavItem to="/house-shopping" label="House Shopping" onClick={() => setOpen(false)} />
           <NavItem to="/subscriptions" label="Subscriptions" onClick={() => setOpen(false)} />
           <NavItem to="/ai" label="SAPA A.I" onClick={() => setOpen(false)} />

@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { FaUserTie } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import useDashboardData from "../../hooks/useDashboardData";
 import { getFinance } from "../../utils/localFinance";
@@ -59,19 +60,28 @@ export default function CoachPage({ coachInput }) {
 
   const input = coachInput || derivedInput;
   const out = useMemo(() => computeCoachNotes(input), [input]);
+
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Coach</h2>
-      <p><b>Sapa Risk:</b> {out.sapaColor} ({out.sapaRisk}/100) | <b>Runway:</b> {out.runwayDays.toFixed(1)} days | <b>Days to 28th:</b> {out.daysToPayday}</p>
-      <div style={{ display: "grid", gap: 10 }}>
-        {out.notes.map((n, idx) => (
-          <div key={idx} style={{ border: "1px solid #2a3550", borderRadius: 10, padding: 12 }}>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>{n.type} · {n.priority}</div>
-            <div style={{ fontWeight: 800 }}>{n.title}</div>
-            <div style={{ marginTop: 6 }}>{n.message}</div>
-            {n.action ? <div style={{ marginTop: 8 }}><a href={n.action}>Go</a></div> : null}
-          </div>
-        ))}
+    <div className="page-shell">
+      <div className="page-card" style={{ maxWidth: 860 }}>
+        <div className="page-title-row">
+          <span className="page-title-icon"><FaUserTie /></span>
+          <h2 className="page-title">Coach</h2>
+        </div>
+        <p className="page-sub">
+          Sapa Risk: <b>{out.sapaColor} ({out.sapaRisk}/100)</b> | Runway: <b>{out.runwayDays.toFixed(1)} days</b> | Days to 28th: <b>{out.daysToPayday}</b>
+        </p>
+
+        <div className="list-stack">
+          {out.notes.map((n, idx) => (
+            <div key={idx} className="list-card">
+              <div className="small muted">{n.type} | {n.priority}</div>
+              <div className="list-title">{n.title}</div>
+              <div style={{ marginTop: 6 }}>{n.message}</div>
+              {n.action ? <div style={{ marginTop: 8 }}><a href={n.action}>Open action</a></div> : null}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

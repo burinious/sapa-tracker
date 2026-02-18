@@ -1,6 +1,7 @@
 export const DEFAULT_PROFILE = {
   // Identity
   fullName: "",
+  username: "",
   gender: "",            // optional: "male" | "female" | "nonbinary" | etc
   pronouns: "",          // e.g. "he/him"
   dateOfBirth: "",       // "YYYY-MM-DD"
@@ -75,12 +76,26 @@ export function safeDateStr(s) {
 }
 
 export function mergeDefaults(existing = {}) {
+  const legacyName =
+    (typeof existing.fullName === "string" && existing.fullName.trim()) ||
+    (typeof existing.name === "string" && existing.name.trim()) ||
+    (typeof existing.displayName === "string" && existing.displayName.trim()) ||
+    "";
+  const legacyUsername =
+    (typeof existing.username === "string" && existing.username.trim()) ||
+    (typeof existing.storeName === "string" && existing.storeName.trim()) ||
+    (typeof existing.email === "string" && existing.email.includes("@")
+      ? existing.email.split("@")[0]
+      : "");
+
   // shallow merge + nested objects merge
   const p = { ...DEFAULT_PROFILE, ...existing };
 
   p.primaryIncome = { ...DEFAULT_PROFILE.primaryIncome, ...(existing.primaryIncome || {}) };
   p.rent = { ...DEFAULT_PROFILE.rent, ...(existing.rent || {}) };
   p.spendingPrefs = { ...DEFAULT_PROFILE.spendingPrefs, ...(existing.spendingPrefs || {}) };
+  p.fullName = String(p.fullName || legacyName || "").trim();
+  p.username = String(p.username || legacyUsername || "").trim();
 
   // fixedBills should be array; if missing, keep empty
   p.fixedBills = Array.isArray(existing.fixedBills) ? existing.fixedBills : (DEFAULT_PROFILE.fixedBills || []);

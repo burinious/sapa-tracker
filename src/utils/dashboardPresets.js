@@ -1,5 +1,7 @@
 export const DASHBOARD_WIDGETS = [
   "quickAdd",
+  "modules",
+  "actionCenter",
   "pressureThisWeek",
   "aiNotes",
   "spendingInsights",
@@ -8,21 +10,38 @@ export const DASHBOARD_WIDGETS = [
 ];
 
 export const DASHBOARD_PRESETS = {
+  focus: {
+    label: "Focus",
+    widgets: {
+      quickAdd: false,
+      modules: false,
+      actionCenter: true,
+      pressureThisWeek: false,
+      aiNotes: false,
+      spendingInsights: false,
+      recentTransactions: true,
+      sapaAiInfo: false,
+    },
+  },
   simple: {
     label: "Simple",
     widgets: {
-      quickAdd: true,
+      quickAdd: false,
+      modules: false,
+      actionCenter: true,
       pressureThisWeek: true,
-      aiNotes: true,
+      aiNotes: false,
       spendingInsights: false,
       recentTransactions: true,
-      sapaAiInfo: true,
+      sapaAiInfo: false,
     },
   },
   standard: {
     label: "Standard",
     widgets: {
       quickAdd: true,
+      modules: false,
+      actionCenter: true,
       pressureThisWeek: true,
       aiNotes: true,
       spendingInsights: true,
@@ -34,6 +53,8 @@ export const DASHBOARD_PRESETS = {
     label: "Pro",
     widgets: {
       quickAdd: true,
+      modules: true,
+      actionCenter: true,
       pressureThisWeek: true,
       aiNotes: true,
       spendingInsights: true,

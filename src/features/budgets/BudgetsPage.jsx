@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { FaWallet } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { getMonthlyBudget, monthKey, upsertMonthlyBudget } from "../../services/budgets";
 import { getMonthlyBudgetLocal } from "../../utils/localBudgets";
@@ -15,7 +16,7 @@ export default function BudgetsPage() {
 
   useEffect(() => {
     if (!uid) return;
-    getMonthlyBudget(uid, month).then(d => {
+    getMonthlyBudget(uid, month).then((d) => {
       if (!d) return;
       setDailyFloor(Number(d.dailyFloor ?? 12000));
       setBetBudget(Number(d.categoryBudgets?.bet ?? 50000));
@@ -38,24 +39,31 @@ export default function BudgetsPage() {
       salaryExpected: Number(salaryExpected),
       categoryBudgets: { bet: Number(betBudget) }
     });
-    alert("Saved ✅");
+    alert("Saved");
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Budgets ({month})</h2>
-      <LocalOnlyNotice pendingCount={pendingCount} />
-      <div style={{ display:"grid", gap: 10, maxWidth: 520 }}>
-        <label>Daily Floor (₦/day)
-          <input type="number" value={dailyFloor} onChange={e=>setDailyFloor(e.target.value)} />
-        </label>
-        <label>Bet Budget (₦/month)
-          <input type="number" value={betBudget} onChange={e=>setBetBudget(e.target.value)} />
-        </label>
-        <label>Salary Expected (₦)
-          <input type="number" value={salaryExpected} onChange={e=>setSalaryExpected(e.target.value)} />
-        </label>
-        <button onClick={save}>Save</button>
+    <div className="page-shell">
+      <div className="page-card" style={{ maxWidth: 620 }}>
+        <div className="page-title-row">
+          <span className="page-title-icon"><FaWallet /></span>
+          <h2 className="page-title">Budgets ({month})</h2>
+        </div>
+        <p className="page-sub">Tune your daily floor and monthly pressure limits.</p>
+        <LocalOnlyNotice pendingCount={pendingCount} />
+
+        <div className="page-stack-md" style={{ marginTop: 10 }}>
+          <label className="small">Daily Floor (NGN/day)
+            <input type="number" value={dailyFloor} onChange={(e) => setDailyFloor(e.target.value)} />
+          </label>
+          <label className="small">Bet Budget (NGN/month)
+            <input type="number" value={betBudget} onChange={(e) => setBetBudget(e.target.value)} />
+          </label>
+          <label className="small">Salary Expected (NGN)
+            <input type="number" value={salaryExpected} onChange={(e) => setSalaryExpected(e.target.value)} />
+          </label>
+          <button className="btn" onClick={save}>Save Budget</button>
+        </div>
       </div>
     </div>
   );

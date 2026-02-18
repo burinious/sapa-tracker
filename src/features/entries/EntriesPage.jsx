@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { FaBookOpen, FaPlus } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import { getRecentEntries } from "../../services/entries";
 import { getEntries } from "../../utils/localEntries";
@@ -10,6 +11,7 @@ export default function EntriesPage() {
   const uid = user?.uid || "";
   const [items, setItems] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
+
   useEffect(() => {
     if (!uid) return;
     getRecentEntries(uid, 25).then(setItems).catch(console.error);
@@ -22,22 +24,49 @@ export default function EntriesPage() {
   }, [uid, items]);
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Entries</h2>
-      <LocalOnlyNotice pendingCount={pendingCount} />
-      <p>Recent entries (newest first)</p>
-      <Link to="/entries/new">+ New Entry</Link>
-      <div style={{ marginTop: 12 }}>
-        {items.map(e => (
-          <div key={e.id} style={{ border: "1px solid #2a3550", borderRadius: 10, padding: 12, marginBottom: 10 }}>
-            <div style={{ opacity: 0.8, fontSize: 12 }}>{e.date || ""}</div>
-            <div style={{ fontWeight: 700 }}>{e.title || "Untitled"}</div>
-            <div style={{ opacity: 0.9, marginTop: 6 }}>{(e.text || "").slice(0, 120)}{(e.text || "").length > 120 ? "..." : ""}</div>
-            <div style={{ marginTop: 8 }}>
-              <Link to={`/entries/${e.id}/edit`}>Edit</Link>
+    <div className="page-shell">
+      <div className="page-card entries-page-card">
+        <div className="page-title-row">
+          <span className="page-title-icon"><FaBookOpen /></span>
+          <h2 className="page-title">Entries Journal</h2>
+        </div>
+        <p className="page-sub">Recent entries, newest first.</p>
+        <LocalOnlyNotice pendingCount={pendingCount} />
+
+        <div className="toolbar entries-topbar">
+          <span className="stat-pill">Total notes: <b>{items.length}</b></span>
+          <Link className="btn" to="/entries/new"><FaPlus /> New Entry</Link>
+        </div>
+
+        <div className="list-stack entries-list-stack">
+          {items.length === 0 ? (
+            <div className="list-card">
+              <div className="list-title">No entries yet</div>
+              <p className="small muted">Start with your first money gist to build your journal timeline.</p>
             </div>
-          </div>
-        ))}
+          ) : items.map((e) => (
+            <article key={e.id} className="list-card entry-item-card">
+              <div className="entry-item-head">
+                <div className="small muted">{e.date || "No date"}</div>
+                <Link to={`/entries/${e.id}/edit`} className="entry-edit-link">Edit</Link>
+              </div>
+
+              <h4 className="entry-item-title">{e.title || "Untitled"}</h4>
+
+              <div className="entry-item-preview">
+                {(e.text || "").slice(0, 180)}{(e.text || "").length > 180 ? "..." : ""}
+              </div>
+
+              {Array.isArray(e.tags) && e.tags.length ? (
+                <div className="entry-tag-row">
+                  {e.tags.slice(0, 6).map((tag) => (
+                    <span key={tag} className="entry-tag-chip">#{tag}</span>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </div>
       </div>
     </div>
   );

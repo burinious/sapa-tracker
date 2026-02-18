@@ -36,17 +36,7 @@ export default function LocalOnlyNotice({ pendingCount = 0 }) {
       : "Cloud sync is unavailable right now. You are in local-only mode.";
 
   return (
-    <div
-      style={{
-        padding: "10px 12px",
-        background: "rgba(255,165,0,0.15)",
-        border: "1px solid rgba(255,165,0,0.40)",
-        color: "#ffd28a",
-        borderRadius: 12,
-        marginBottom: 12,
-        fontSize: 13,
-      }}
-    >
+    <div className="note-warn">
       <div style={{ fontWeight: 700, marginBottom: 4 }}>{headline}</div>
       <div>{body}</div>
     </div>

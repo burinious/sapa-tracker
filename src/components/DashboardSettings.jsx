@@ -1,22 +1,36 @@
 import { useEffect, useMemo, useState } from "react";
 import { DASHBOARD_PRESETS, DASHBOARD_WIDGETS, mergeWidgets } from "../utils/dashboardPresets";
 
+const WIDGET_LABELS = {
+  quickAdd: "Quick Add",
+  modules: "Sidebar Modules",
+  actionCenter: "Action Center",
+  pressureThisWeek: "Pressure This Week",
+  aiNotes: "AI Notes",
+  spendingInsights: "Spending Insights",
+  recentTransactions: "Recent Transactions",
+  sapaAiInfo: "SAPA A.I Info",
+};
+
 export default function DashboardSettings({
   open,
   onClose,
   mode,
+  theme,
   overrides,
   onSave,
 }) {
   const [draftMode, setDraftMode] = useState(mode || "simple");
+  const [draftTheme, setDraftTheme] = useState(theme || "ocean");
   const [draftOverrides, setDraftOverrides] = useState(overrides || {});
 
   useEffect(() => {
     if (open) {
       setDraftMode(mode || "simple");
+      setDraftTheme(theme || "ocean");
       setDraftOverrides(overrides || {});
     }
-  }, [open, mode, overrides]);
+  }, [open, mode, theme, overrides]);
 
   const preset = DASHBOARD_PRESETS[draftMode]?.widgets || {};
   const show = useMemo(() => mergeWidgets(preset, draftOverrides), [preset, draftOverrides]);
@@ -28,37 +42,21 @@ export default function DashboardSettings({
   if (!open) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(0,0,0,0.55)",
-        display: "grid",
-        placeItems: "center",
-        zIndex: 9999,
-        padding: 14,
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="st-card"
-        style={{ width: "min(860px, 96vw)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="list-top">
           <div>
-            <h3 style={{ marginBottom: 4 }}>Dashboard Settings</h3>
-            <p className="small" style={{ opacity: 0.85 }}>
-              Choose a level, then toggle widgets.
-            </p>
+            <h3 className="page-title">Dashboard Settings</h3>
+            <p className="small muted">Choose a level, then toggle widgets.</p>
           </div>
           <button className="btn" type="button" onClick={onClose}>Close</button>
         </div>
 
-        <div style={{ marginTop: 12, display: "grid", gap: 12 }}>
+        <div className="page-stack-md" style={{ marginTop: 12 }}>
           <div>
             <label className="small">Dashboard level</label>
             <select className="input" value={draftMode} onChange={(e) => setDraftMode(e.target.value)}>
+              <option value="focus">Focus</option>
               <option value="simple">Simple</option>
               <option value="standard">Standard</option>
               <option value="pro">Pro</option>
@@ -66,50 +64,40 @@ export default function DashboardSettings({
           </div>
 
           <div>
-            <div className="small" style={{ opacity: 0.85, marginBottom: 8 }}>
-              Widgets (on/off)
-            </div>
+            <label className="small">Visual theme</label>
+            <select className="input" value={draftTheme} onChange={(e) => setDraftTheme(e.target.value)}>
+              <option value="ocean">Ocean Glass</option>
+              <option value="sunrise">Sunrise Glow</option>
+              <option value="midnight">Midnight Dark</option>
+              <option value="obsidian">Obsidian Dark</option>
+            </select>
+          </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div>
+            <div className="small muted" style={{ marginBottom: 8 }}>Widgets (on/off)</div>
+            <div className="split-2">
               {DASHBOARD_WIDGETS.map((k) => (
-                <label
-                  key={k}
-                  className="small"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    borderRadius: 14,
-                    padding: 10,
-                    background: "rgba(255,255,255,0.03)",
-                    cursor: "pointer",
-                  }}
-                >
+                <label key={k} className="list-card small" style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
                   <input type="checkbox" checked={!!show[k]} onChange={() => toggle(k)} />
-                  <span style={{ fontWeight: 800 }}>{k}</span>
+                  <span style={{ fontWeight: 800 }}>{WIDGET_LABELS[k] || k}</span>
                 </label>
               ))}
             </div>
           </div>
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 6 }}>
+          <div className="toolbar">
             <button
               className="btn"
               type="button"
               onClick={() => {
-                onSave?.({ mode: draftMode, overrides: draftOverrides });
+                onSave?.({ mode: draftMode, theme: draftTheme, overrides: draftOverrides });
                 onClose?.();
               }}
             >
               Save Settings
             </button>
 
-            <button
-              className="btn"
-              type="button"
-              onClick={() => setDraftOverrides({})}
-            >
+            <button className="btn" type="button" onClick={() => setDraftOverrides({})}>
               Reset Overrides
             </button>
           </div>

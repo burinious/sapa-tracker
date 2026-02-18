@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-label="SapaTracker logo">
+  <defs>
+    <linearGradient id="logo-bg" x1="10" y1="8" x2="62" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2c9ad7"/>
+      <stop offset="0.56" stop-color="#1ab8a4"/>
+      <stop offset="1" stop-color="#f39a5f"/>
+    </linearGradient>
+    <linearGradient id="logo-sheen" x1="12" y1="10" x2="52" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="3.5" y="3.5" width="65" height="65" rx="20" fill="url(#logo-bg)"/>
+  <rect x="3.5" y="3.5" width="65" height="65" rx="20" fill="url(#logo-sheen)"/>
+  <rect x="3.5" y="3.5" width="65" height="65" rx="20" fill="none" stroke="#ffffff" stroke-opacity="0.44"/>
+
+  <path d="M47.2 20.3c-2.6-2.7-6.5-4.3-11.1-4.3-7.8 0-13.6 4.4-13.6 10.3 0 5.6 4.3 8.4 10.8 10.1l5.4 1.4c3.8 1 5.9 2.1 5.9 4.2 0 2.5-2.8 4.2-7.2 4.2-4.7 0-8.7-1.9-11.3-5.3l-5.9 5.9c3.5 4.9 9.8 8 17.5 8 9.4 0 16-4.8 16-11.7 0-5.9-4.1-8.9-12.2-11l-5.1-1.3c-3.4-.9-4.9-1.9-4.9-3.8 0-2.2 2.4-3.8 6.4-3.8 3.6 0 6.8 1.3 9.2 3.7z" fill="#ffffff"/>
+  <path d="M43.8 51.6l5.3-5.1 4.5 4.2 7.1-7.1" stroke="#ffffff" stroke-opacity="0.92" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

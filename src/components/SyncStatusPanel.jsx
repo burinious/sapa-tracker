@@ -70,12 +70,12 @@ export default function SyncStatusPanel() {
   };
 
   return (
-    <div className="card" style={{ marginTop: 12 }}>
-      <div style={{ fontWeight: 800, marginBottom: 6 }}>Sync Status</div>
+    <div className="page-card" style={{ marginTop: 12 }}>
+      <div className="list-title" style={{ marginBottom: 6 }}>Sync Status</div>
       <div className="small">Pending items: <b>{pending}</b></div>
       <div className="small">Last sync: <b>{lastSyncLabel}</b></div>
       <div className="small">Last error: <b>{lastErrorLabel}</b></div>
-      <div style={{ marginTop: 10 }}>
+      <div className="toolbar">
         <button className="btn" type="button" onClick={manualSync} disabled={syncing || !uid}>
           {syncing ? "Syncing..." : "Sync Now"}
         </button>

@@ -3,6 +3,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { registerSW } from "virtual:pwa-register";
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { initAppTheme } from "./utils/theme";
 
 // Optional: keep global css if you have any
 // import "./index.css";
@@ -10,6 +11,8 @@ import ReactDOM from "react-dom/client";
 function Root() {
   return <ErrorBoundary><App /></ErrorBoundary>;
 }
+
+initAppTheme();
 
 try {
   ReactDOM.createRoot(document.getElementById("root")).render(

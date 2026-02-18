@@ -100,6 +100,20 @@ export function AuthProvider({ children }) {
   const register = async (email, password, displayName) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) await updateProfile(cred.user, { displayName });
+    if (cred?.user?.uid) {
+      const ref = doc(db, "users", cred.user.uid);
+      await setDoc(
+        ref,
+        {
+          email: cred.user.email || email,
+          fullName: displayName || "",
+          username: displayName || "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
     return cred.user;
   };
 

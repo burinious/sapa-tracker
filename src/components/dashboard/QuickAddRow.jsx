@@ -21,9 +21,9 @@ export default function QuickAddRow() {
         <Btn icon={<FaArrowDown />} label="Expense" onClick={() => nav("/add-transaction?type=expense")} />
         <Btn icon={<FaArrowUp />} label="Income" onClick={() => nav("/add-transaction?type=income")} />
         <Btn icon={<FaRegCreditCard />} label="Subscription" onClick={() => nav("/add-transaction?type=expense&tag=subscription")} />
-        <Btn icon={<FaRegStickyNote />} label="Note" onClick={() => nav("/dashboard#notes")} />
+        <Btn icon={<FaRegStickyNote />} label="Note" onClick={() => nav("/entries/new")} />
       </div>
-      <div className="st-hint">Tip: start from “Expense” daily — that’s where sapa hides.</div>
+      <div className="st-hint">Tip: log expenses daily. That is where sapa hides.</div>
     </div>
   );
 }

@@ -10,7 +10,7 @@ export default function SapaRiskMeter({
   currency = "NGN",
   windowDays = 7,
 }) {
-  const explain = `Bills in ${windowDays}d: ${fmtMoney(dueTotal, currency)} • Avg/day: ${fmtMoney(avgDailySpend7, currency)} • Cash~ ${fmtMoney(cashApprox, currency)}`;
+  const explain = `Bills in ${windowDays}d: ${fmtMoney(dueTotal, currency)} | Avg/day: ${fmtMoney(avgDailySpend7, currency)} | Cash~ ${fmtMoney(cashApprox, currency)}`;
 
   return (
     <div className="st-card st-risk">

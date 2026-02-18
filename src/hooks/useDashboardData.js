@@ -139,19 +139,21 @@ export default function useDashboardData(uid, opts = {}) {
     const mtdIncome = sumBy(txMTD.filter((t) => t.type === "income"), (t) => t.amount);
     const mtdExpense = sumBy(txMTD.filter((t) => t.type === "expense"), (t) => t.amount);
 
-    // last 7 days spend: if date string exists, use it; else approximate with latest transactions slice
-    const last7ISO = isoOfDate(subDays(new Date(), 7));
-    const tx7 = txHasDate
-      ? transactions.filter((t) => (t.date || "") >= last7ISO)
+    const lastRiskISO = isoOfDate(subDays(new Date(), riskWindowDays));
+    const txRiskWindow = txHasDate
+      ? transactions.filter((t) => (t.date || "") >= lastRiskISO)
       : transactions.slice(0, 50);
 
-    const spend7 = sumBy(tx7.filter((t) => t.type === "expense"), (t) => t.amount);
-    const avgDailySpend7 = spend7 / 7;
+    const spendRiskWindow = sumBy(txRiskWindow.filter((t) => t.type === "expense"), (t) => t.amount);
+    const avgDailySpend7 = spendRiskWindow / Math.max(riskWindowDays, 1);
 
     // subscriptions due soon uses nextDueDate string
     const dueCutISO = isoOfDate(subDays(new Date(), -riskWindowDays));
     const dueSoon = subscriptions
-      .filter((s) => (s.nextDueDate || "") <= dueCutISO)
+      .filter((s) => {
+        const due = typeof s?.nextDueDate === "string" ? s.nextDueDate : "";
+        return !!due && due <= dueCutISO;
+      })
       .sort((a, b) => (a.nextDueDate || "").localeCompare(b.nextDueDate || ""));
 
     const dueTotal = sumBy(dueSoon, (s) => s.amount);
@@ -169,8 +171,12 @@ export default function useDashboardData(uid, opts = {}) {
     if (score >= 75) zone = "STABLE";
     if (score < 45) zone = "RED ZONE";
 
-    // Top categories (7d)
-    const exp7 = tx7.filter((t) => t.type === "expense");
+    // Top categories (selected tx window)
+    const lastTxWindowISO = isoOfDate(subDays(new Date(), txWindowDays));
+    const txTopWindow = txHasDate
+      ? transactions.filter((t) => (t.date || "") >= lastTxWindowISO)
+      : transactions.slice(0, 120);
+    const exp7 = txTopWindow.filter((t) => t.type === "expense");
     const byCat = groupBy(exp7, (t) => t.categoryName || "Other");
     const topCats = Array.from(byCat.entries())
       .map(([name, items]) => ({
@@ -181,7 +187,7 @@ export default function useDashboardData(uid, opts = {}) {
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 5);
 
-    const recent = transactions.slice(0, 10);
+    const recent = transactions.slice(0, 5);
 
     return {
       currency,
@@ -196,7 +202,7 @@ export default function useDashboardData(uid, opts = {}) {
       topCats,
       recent,
     };
-  }, [transactions, subscriptions, currency, riskWindowDays]);
+  }, [transactions, subscriptions, currency, riskWindowDays, txWindowDays]);
 
   return {
     loading,

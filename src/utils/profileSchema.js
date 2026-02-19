@@ -47,6 +47,15 @@ export const DEFAULT_PROFILE = {
   aiTone: "street",           // "street" | "coach" | "corporate"
   sensitiveMode: false,       // avoid judgmental phrasing
 
+  // Notification preferences
+  notificationPrefs: {
+    enabled: true,
+    coachEntries: true,
+    billReminders: true,
+    loanReminders: true,
+    weeklyDigest: true,
+  },
+
   // Metadata
   createdAt: null,
   updatedAt: null
@@ -94,6 +103,7 @@ export function mergeDefaults(existing = {}) {
   p.primaryIncome = { ...DEFAULT_PROFILE.primaryIncome, ...(existing.primaryIncome || {}) };
   p.rent = { ...DEFAULT_PROFILE.rent, ...(existing.rent || {}) };
   p.spendingPrefs = { ...DEFAULT_PROFILE.spendingPrefs, ...(existing.spendingPrefs || {}) };
+  p.notificationPrefs = { ...DEFAULT_PROFILE.notificationPrefs, ...(existing.notificationPrefs || {}) };
   p.fullName = String(p.fullName || legacyName || "").trim();
   p.username = String(p.username || legacyUsername || "").trim();
 

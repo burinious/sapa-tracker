@@ -30,7 +30,7 @@ const pctChange = (cur, prev) => {
 
 const clip = (s, max = 140) => {
   const str = String(s || "");
-  return str.length > max ? str.slice(0, max - 1) + "…" : str;
+  return str.length > max ? str.slice(0, max - 3) + "..." : str;
 };
 
 function mkNote({ type, severity, title, body, action, meta, expiresInDays = 7 }) {
@@ -51,7 +51,6 @@ function mkNote({ type, severity, title, body, action, meta, expiresInDays = 7 }
 
 export function generateSapaInsights({
   transactions = [],
-  subscriptions = [],
   computed = null,
   profile = { currency: "NGN", riskWindowDays: 7 },
 } = {}) {
@@ -223,3 +222,4 @@ export function generateSapaInsights({
 
   return finalNotes;
 }
+

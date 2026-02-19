@@ -12,7 +12,7 @@ import {
 async function tryFirestore(fn) {
   try {
     return await fn();
-  } catch (err) {
+  } catch {
     return null;
   }
 }

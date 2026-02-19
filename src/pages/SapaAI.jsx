@@ -27,7 +27,7 @@ export default function SapaAI() {
       role: "assistant",
       text:
         `I'm SAPA A.I.\n` +
-        `Try: \"is paying rent still a possibility?\", \"postpone netflix\", \"why I dey broke mid-month?\"\n` +
+        `Try: "is paying rent still a possibility?", "postpone netflix", "why I dey broke mid-month?"\n` +
         `(Scenario brain loaded: ${SAPA_INTENTS_COUNT} intents.)`,
     },
   ]);

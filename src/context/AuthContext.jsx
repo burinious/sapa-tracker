@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { auth, db } from "../firebase/firebase";
 import {
   onAuthStateChanged,
@@ -98,7 +98,7 @@ export function AuthProvider({ children }) {
   }, [user?.uid]);
 
   // Auth actions (keep simple)
-  const register = async (email, password, displayName) => {
+  const register = useCallback(async (email, password, displayName) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) await updateProfile(cred.user, { displayName });
     if (cred?.user?.uid) {
@@ -116,27 +116,27 @@ export function AuthProvider({ children }) {
       );
     }
     return cred.user;
-  };
+  }, []);
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     const cred = await signInWithEmailAndPassword(auth, email, password);
     return cred.user;
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await signOut(auth);
-  };
+  }, []);
 
-  const resetPassword = async (email) => {
+  const resetPassword = useCallback(async (email) => {
     await sendPasswordResetEmail(auth, email);
-  };
+  }, []);
 
   // Update profile patch (merge) + immediate UI reflection via snapshot
-  const updateUserProfile = async (patch) => {
+  const updateUserProfile = useCallback(async (patch) => {
     if (!user?.uid) throw new Error("Not logged in");
     const ref = doc(db, "users", user.uid);
     await setDoc(ref, { ...patch, updatedAt: serverTimestamp() }, { merge: true });
-  };
+  }, [user?.uid]);
 
   const value = useMemo(
     () => ({
@@ -149,7 +149,7 @@ export function AuthProvider({ children }) {
       logout,
       updateUserProfile,
     }),
-    [user, profile, loading]
+    [user, profile, loading, register, login, resetPassword, logout, updateUserProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

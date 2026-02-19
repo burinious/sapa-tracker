@@ -32,8 +32,10 @@ export default function DashboardSettings({
     }
   }, [open, mode, theme, overrides]);
 
-  const preset = DASHBOARD_PRESETS[draftMode]?.widgets || {};
-  const show = useMemo(() => mergeWidgets(preset, draftOverrides), [preset, draftOverrides]);
+  const show = useMemo(() => {
+    const preset = DASHBOARD_PRESETS[draftMode]?.widgets || {};
+    return mergeWidgets(preset, draftOverrides);
+  }, [draftMode, draftOverrides]);
 
   const toggle = (k) => {
     setDraftOverrides((prev) => ({ ...(prev || {}), [k]: !show[k] }));

@@ -31,7 +31,9 @@ function readLegacyLocalProfile(uid) {
       if (!raw) continue;
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === "object") return parsed;
-    } catch {}
+    } catch {
+      // Ignore malformed legacy payload and continue probing old keys.
+    }
   }
   return null;
 }

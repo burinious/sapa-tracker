@@ -174,7 +174,6 @@ export default function HouseShopping() {
       const toAdd = DEFAULT_HOUSE_SHOPPING.filter((x) => !existing.has(x.name.toLowerCase().trim()));
       if (!toAdd.length) return toast.info("Defaults already loaded.");
       for (const it of toAdd) {
-        // eslint-disable-next-line no-await-in-loop
         await addShoppingItem(uid, it);
       }
       toast.success(`Loaded ${toAdd.length} starter items`);

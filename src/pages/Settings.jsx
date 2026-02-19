@@ -1,7 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 import { applyAppTheme, getStoredAppTheme } from "../utils/theme";
+import { normalizeNotificationPrefs, PUSH_NOTIFICATION_AREAS } from "../utils/pushAreas";
 import "../styles/app.css";
 
 const DASHBOARD_KEY = "sapa-dashboard-settings";
@@ -31,15 +33,25 @@ function readDashboardSettings() {
 
 export default function Settings() {
   const navigate = useNavigate();
+  const { user, profile, updateUserProfile } = useAuth();
   const initialDash = useMemo(() => readDashboardSettings(), []);
+  const initialNotificationPrefs = useMemo(
+    () => normalizeNotificationPrefs(profile?.notificationPrefs),
+    [profile?.notificationPrefs]
+  );
 
   const [appTheme, setAppTheme] = useState(getStoredAppTheme());
   const [dashTheme, setDashTheme] = useState(initialDash.theme);
   const [dashMode, setDashMode] = useState(initialDash.mode);
   const [riskWindowDays, setRiskWindowDays] = useState(initialDash.riskWindowDays);
+  const [notificationPrefs, setNotificationPrefs] = useState(initialNotificationPrefs);
   const [busy, setBusy] = useState(false);
 
-  function saveSettings() {
+  useEffect(() => {
+    setNotificationPrefs(initialNotificationPrefs);
+  }, [initialNotificationPrefs]);
+
+  async function saveSettings() {
     setBusy(true);
     try {
       applyAppTheme(appTheme);
@@ -52,6 +64,9 @@ export default function Settings() {
           theme: dashTheme,
         })
       );
+      if (user?.uid) {
+        await updateUserProfile({ notificationPrefs });
+      }
       toast.success("Settings updated");
     } catch (err) {
       toast.error(err?.message || "Failed to save settings");
@@ -75,6 +90,10 @@ export default function Settings() {
     } catch (err) {
       toast.error(err?.message || "Failed to reset dashboard layout");
     }
+  }
+
+  function toggleNotificationPref(key) {
+    setNotificationPrefs((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
   return (
@@ -153,6 +172,39 @@ export default function Settings() {
               <button type="button" className="btn settings-secondary-btn" onClick={resetDashboardLayout}>
                 Reset layout
               </button>
+            </div>
+          </div>
+
+          <div className="section-card">
+            <h3 className="section-title">Push Notifications</h3>
+            <div className="small muted">Choose notification areas to receive on your phone.</div>
+            <div className="settings-notify-stack">
+              <label className="settings-notify-item">
+                <input
+                  type="checkbox"
+                  checked={!!notificationPrefs.enabled}
+                  onChange={() => toggleNotificationPref("enabled")}
+                />
+                <span>
+                  <b>Enable notifications</b>
+                  <div className="small muted">Turn all push notifications on or off.</div>
+                </span>
+              </label>
+
+              {PUSH_NOTIFICATION_AREAS.map((area) => (
+                <label key={area.id} className="settings-notify-item">
+                  <input
+                    type="checkbox"
+                    checked={!!notificationPrefs[area.prefKey]}
+                    disabled={!notificationPrefs.enabled}
+                    onChange={() => toggleNotificationPref(area.prefKey)}
+                  />
+                  <span>
+                    <b>{area.title}</b>
+                    <div className="small muted">Example: {area.sample}</div>
+                  </span>
+                </label>
+              ))}
             </div>
           </div>
 

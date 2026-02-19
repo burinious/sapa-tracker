@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { getSyncMeta } from "../utils/syncMeta";
 import { syncLocalToFirestore } from "../services/syncLocalToFirestore";
@@ -13,7 +13,7 @@ export default function SyncStatusPanel() {
   const [pending, setPending] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
-  const refresh = () => {
+  const refresh = useCallback(() => {
     if (!uid) return;
     setMeta(getSyncMeta(uid));
 
@@ -27,7 +27,7 @@ export default function SyncStatusPanel() {
     const pendingLoans = loans.filter((l) => l.syncStatus !== "synced").length;
     const pendingBudget = budget && budget.syncStatus !== "synced" ? 1 : 0;
     setPending(pendingEntries + pendingLoans + pendingBudget);
-  };
+  }, [uid]);
 
   useEffect(() => {
     if (!uid) return;
@@ -41,7 +41,7 @@ export default function SyncStatusPanel() {
       window.removeEventListener("online", onSync);
       window.removeEventListener("offline", onSync);
     };
-  }, [uid]);
+  }, [uid, refresh]);
 
   const lastSyncLabel = useMemo(() => {
     if (!meta.lastSyncAtISO) return "Never";

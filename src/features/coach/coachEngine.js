@@ -1,5 +1,33 @@
 import { differenceInCalendarDays } from "date-fns";
 
+const PRIORITY_WEIGHT = {
+  HIGH: 3,
+  MEDIUM: 2,
+  LOW: 1,
+};
+
+function clamp(n, min, max) {
+  return Math.max(min, Math.min(max, n));
+}
+
+function n(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function note({ area, type, priority, title, message, action }) {
+  return {
+    id: `${area}_${Math.random().toString(36).slice(2, 9)}`,
+    area,
+    type,
+    priority,
+    title,
+    message,
+    action: action || null,
+    weight: PRIORITY_WEIGHT[priority] || 1,
+  };
+}
+
 export function computeCoachNotes({
   now = new Date(),
   paydayDay = 28,
@@ -7,179 +35,210 @@ export function computeCoachNotes({
   manualCash = null,
   computedCash = null,
   totalLoanOwed = 0,
-  betBudgetMonthly = 50000,
+  betBudgetMonthly = 0,
   betSpentMonthly = 0,
   workoutsLast7Days = 0,
-  entryLastAt = null, // Date
+  entryLastAt = null,
   breakfastLoggedToday = false,
-  lastShoppingAt = null, // Date
-  lastHomeAuditAt = null // Date
-}) {
-  const cash = (manualCash ?? computedCash ?? 0);
+  lastShoppingAt = null,
+  lastHomeAuditAt = null,
+} = {}) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const payday = new Date(now.getFullYear(), now.getMonth(), paydayDay);
-  const paydayNext = payday >= today ? payday : new Date(now.getFullYear(), now.getMonth()+1, paydayDay);
+  const paydayThisMonth = new Date(now.getFullYear(), now.getMonth(), clamp(n(paydayDay, 28), 1, 31));
+  const payday = paydayThisMonth >= today
+    ? paydayThisMonth
+    : new Date(now.getFullYear(), now.getMonth() + 1, clamp(n(paydayDay, 28), 1, 31));
 
-  const daysToPayday = Math.max(0, differenceInCalendarDays(paydayNext, today));
-  const runwayDays = dailyFloor > 0 ? (cash / dailyFloor) : 999;
+  const cash = n(manualCash ?? computedCash ?? 0);
+  const floor = Math.max(1, n(dailyFloor, 12000));
+  const daysToPayday = Math.max(0, differenceInCalendarDays(payday, today));
+  const runwayDays = cash > 0 ? cash / floor : 0;
 
   const notes = [];
 
-  // Entry missing (24hrs)
-  if (!entryLastAt || (now.getTime() - entryLastAt.getTime()) > 24 * 60 * 60 * 1000) {
-    notes.push({
-      type: "REMINDER",
-      priority: "HIGH",
-      title: "No entry in 24hrs",
-      message: "Guy you never drop entry for 24hrs. 30 seconds gist make we update record.",
-      action: "/entries/new"
-    });
-  }
-
-  // Breakfast missing after 10:30
-  const hhmm = now.getHours() * 60 + now.getMinutes();
-  if (hhmm >= (10*60+30) && !breakfastLoggedToday) {
-    notes.push({
-      type: "REMINDER",
-      priority: "MEDIUM",
-      title: "Breakfast no show",
-      message: "You never chop breakfast o. Even if na small, log am.",
-      action: "/entries/new"
-    });
-  }
-
-  // Exercise target 4x/week
-  if (workoutsLast7Days < 4) {
-    notes.push({
-      type: "NUDGE",
-      priority: "MEDIUM",
-      title: "Exercise target",
-      message: `Exercise no reach target this week. You need ${4 - workoutsLast7Days} more session(s).`,
-      action: "/coach"
-    });
-  } else {
-    notes.push({
-      type: "PRAISE",
-      priority: "LOW",
-      title: "Exercise steady",
-      message: "Your exercise dey regular. Body go thank you.",
-      action: "/coach"
-    });
-  }
-
-  // Betting budget
-  const betPct = betBudgetMonthly > 0 ? (betSpentMonthly / betBudgetMonthly) : 0;
-  if (betPct >= 1) {
-    notes.push({
-      type: "WARNING",
-      priority: "HIGH",
-      title: "Bet budget don pass",
-      message: "Guy you don pass betting budget. Freeze betting first.",
-      action: "/budgets"
-    });
-  } else if (betPct >= 0.8) {
-    notes.push({
-      type: "WARNING",
-      priority: "MEDIUM",
-      title: "Bet budget near cap",
-      message: "Betting don near cap (80%). Calm down make e no enter red.",
-      action: "/budgets"
-    });
-  } else {
-    notes.push({
-      type: "PRAISE",
-      priority: "LOW",
-      title: "Bet budget safe",
-      message: "You have not spent the budget you have for bet. Respect.",
-      action: "/budgets"
-    });
-  }
-
-  // Salary soon + runway
-  if (runwayDays >= daysToPayday) {
-    notes.push({
-      type: "REASSURE",
-      priority: "LOW",
-      title: "Runway OK",
-      message: `You are still within budget. Salary should enter soon (28th). You will be fine.`,
-      action: "/coach"
-    });
-  } else {
-    notes.push({
-      type: "WARNING",
-      priority: "HIGH",
-      title: "Runway short",
-      message: `Guy, if you dey spend normal ₦${dailyFloor}/day, cash no go reach 28th. Reduce spending or plan inflow.`,
-      action: "/coach"
-    });
-  }
-
-  // Loans pressure
-  if (totalLoanOwed > 0) {
-    const ratio = cash > 0 ? (totalLoanOwed / cash) : Infinity;
-    if (ratio >= 2) {
-      notes.push({
-        type: "WARNING",
+  const entryMissing = !entryLastAt || (now.getTime() - new Date(entryLastAt).getTime()) > 24 * 60 * 60 * 1000;
+  if (entryMissing) {
+    notes.push(
+      note({
+        area: "coach_entries",
+        type: "REMINDER",
         priority: "HIGH",
-        title: "Loan trouble signal",
-        message: `You are owing ₦${Math.round(totalLoanOwed).toLocaleString()} and cash is ₦${Math.round(cash).toLocaleString()} (debt heavy pass cash). Make we strategise payment.`,
-        action: "/loans"
-      });
-    } else {
-      notes.push({
+        title: "Coach check-in needed",
+        message: "Sapa Coach is expecting your entries. Add a quick money update now.",
+        action: "/entries/new",
+      })
+    );
+  }
+
+  const hhmm = now.getHours() * 60 + now.getMinutes();
+  if (hhmm >= 10 * 60 + 30 && !breakfastLoggedToday) {
+    notes.push(
+      note({
+        area: "coach_breakfast",
+        type: "REMINDER",
+        priority: "MEDIUM",
+        title: "Breakfast not logged",
+        message: "You are past 10:30 and no breakfast entry was found. Keep your routine log accurate.",
+        action: "/entries/new",
+      })
+    );
+  }
+
+  if (workoutsLast7Days < 4) {
+    notes.push(
+      note({
+        area: "coach_workout",
         type: "NUDGE",
         priority: "MEDIUM",
-        title: "Loan active",
-        message: `Guy you still dey owe ₦${Math.round(totalLoanOwed).toLocaleString()}. No forget say 28th dey always come.`,
-        action: "/loans"
-      });
+        title: "Workout target not reached",
+        message: `You need ${4 - workoutsLast7Days} more workout session(s) this week.`,
+        action: "/entries/new",
+      })
+    );
+  } else {
+    notes.push(
+      note({
+        area: "coach_workout",
+        type: "PRAISE",
+        priority: "LOW",
+        title: "Workout consistency is good",
+        message: "Great streak. Keep this health discipline steady.",
+        action: "/coach",
+      })
+    );
+  }
+
+  const betBudget = Math.max(0, n(betBudgetMonthly, 0));
+  const betSpent = Math.max(0, n(betSpentMonthly, 0));
+  const betPct = betBudget > 0 ? betSpent / betBudget : 0;
+  if (betBudget > 0 && betPct >= 1) {
+    notes.push(
+      note({
+        area: "coach_betting",
+        type: "WARNING",
+        priority: "HIGH",
+        title: "Bet budget exceeded",
+        message: "Your betting spend is above budget. Pause betting and reset your budget.",
+        action: "/budgets",
+      })
+    );
+  } else if (betBudget > 0 && betPct >= 0.8) {
+    notes.push(
+      note({
+        area: "coach_betting",
+        type: "WARNING",
+        priority: "MEDIUM",
+        title: "Bet budget is near limit",
+        message: "You are at 80%+ of your betting cap this month.",
+        action: "/budgets",
+      })
+    );
+  }
+
+  if (runwayDays >= daysToPayday) {
+    notes.push(
+      note({
+        area: "coach_runway",
+        type: "REASSURE",
+        priority: "LOW",
+        title: "Runway looks stable",
+        message: "Your current cash pace should carry you to payday.",
+        action: "/dashboard",
+      })
+    );
+  } else {
+    notes.push(
+      note({
+        area: "coach_runway",
+        type: "WARNING",
+        priority: "HIGH",
+        title: "Runway is short",
+        message: `At about NGN ${Math.round(floor).toLocaleString("en-NG")}/day, current cash may not reach payday.`,
+        action: "/budgets",
+      })
+    );
+  }
+
+  const loanOwed = Math.max(0, n(totalLoanOwed, 0));
+  if (loanOwed > 0) {
+    const ratio = cash > 0 ? loanOwed / cash : Number.POSITIVE_INFINITY;
+    if (ratio >= 2) {
+      notes.push(
+        note({
+          area: "coach_loans",
+          type: "WARNING",
+          priority: "HIGH",
+          title: "Debt pressure is high",
+          message: `Active loan balance is NGN ${Math.round(loanOwed).toLocaleString("en-NG")} and needs a payoff plan.`,
+          action: "/loans",
+        })
+      );
+    } else {
+      notes.push(
+        note({
+          area: "coach_loans",
+          type: "NUDGE",
+          priority: "MEDIUM",
+          title: "Active loan needs tracking",
+          message: `You still owe NGN ${Math.round(loanOwed).toLocaleString("en-NG")}. Keep payments on schedule.`,
+          action: "/loans",
+        })
+      );
     }
   }
 
-  // Shopping overdue (14 days)
   if (lastShoppingAt) {
-    const ds = differenceInCalendarDays(today, new Date(lastShoppingAt));
-    if (ds > 14) {
-      notes.push({
-        type: "NUDGE",
-        priority: "LOW",
-        title: "Shopping overdue",
-        message: `It’s been ${ds} days you do shopping. You dey manage? Plan small restock.`,
-        action: "/entries"
-      });
+    const daysSinceShopping = differenceInCalendarDays(today, new Date(lastShoppingAt));
+    if (daysSinceShopping > 14) {
+      notes.push(
+        note({
+          area: "coach_shopping",
+          type: "NUDGE",
+          priority: "LOW",
+          title: "House shopping review due",
+          message: `It has been ${daysSinceShopping} days since your last shopping update.`,
+          action: "/house-shopping",
+        })
+      );
     }
   }
 
-  // Home audit overdue (30 days)
   if (lastHomeAuditAt) {
-    const da = differenceInCalendarDays(today, new Date(lastHomeAuditAt));
-    if (da > 30) {
-      notes.push({
-        type: "NUDGE",
-        priority: "LOW",
-        title: "Home audit overdue",
-        message: `Are you sure everything is intact? Last home audit was ${da} days ago.`,
-        action: "/coach"
-      });
+    const daysSinceAudit = differenceInCalendarDays(today, new Date(lastHomeAuditAt));
+    if (daysSinceAudit > 30) {
+      notes.push(
+        note({
+          area: "coach_home_audit",
+          type: "NUDGE",
+          priority: "LOW",
+          title: "Home audit overdue",
+          message: `Last home audit was ${daysSinceAudit} days ago. Do a quick home-check log.`,
+          action: "/entries/new",
+        })
+      );
     }
   }
 
-  // basic SapaRisk color
-  const sapaRisk = Math.max(0, Math.min(100, Math.round(
-    (runwayDays < daysToPayday ? 35 : 10)
-    + (betPct >= 0.8 ? 20 : 0)
-    + (totalLoanOwed > 0 ? 15 : 0)
-    + (workoutsLast7Days < 4 ? 10 : 0)
-  )));
-  const sapaColor = sapaRisk <= 35 ? "GREEN" : (sapaRisk <= 65 ? "YELLOW" : "RED");
+  const sapaRisk = clamp(
+    Math.round(
+      (runwayDays < daysToPayday ? 35 : 10) +
+        (betPct >= 0.8 ? 20 : 0) +
+        (loanOwed > 0 ? 15 : 0) +
+        (workoutsLast7Days < 4 ? 10 : 0)
+    ),
+    0,
+    100
+  );
 
-  notes.unshift({
-    type: "STATUS",
-    priority: "LOW",
-    title: "Sapa Risk",
-    message: `Your SAPA risk is ${sapaColor.toLowerCase()} (${sapaRisk}/100).`,
-    action: "/coach"
-  });
+  const sapaColor = sapaRisk <= 35 ? "GREEN" : sapaRisk <= 65 ? "YELLOW" : "RED";
 
-  return { notes, sapaRisk, sapaColor, daysToPayday, runwayDays };
+  const sorted = [...notes].sort((a, b) => b.weight - a.weight || a.title.localeCompare(b.title));
+
+  return {
+    notes: sorted,
+    sapaRisk,
+    sapaColor,
+    daysToPayday,
+    runwayDays,
+  };
 }

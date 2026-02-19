@@ -34,5 +34,7 @@ export function read(uid, name, fallback) {
 export function write(uid, name, value) {
   try {
     localStorage.setItem(primaryKey(uid, name), JSON.stringify(value));
-  } catch {}
+  } catch {
+    // Local storage may be unavailable (private mode / quota exceeded).
+  }
 }

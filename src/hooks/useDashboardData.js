@@ -64,7 +64,7 @@ export default function useDashboardData(uid, opts = {}) {
 
     setLoading(true);
     setError("");
-    const useCacheIfEmpty = () => {
+    const loadCacheIfEmpty = () => {
       const cachedTx = getCachedTransactions(uid);
       const cachedSubs = getCachedSubscriptions(uid);
       const cachedNotes = getCachedNotes(uid);
@@ -72,7 +72,7 @@ export default function useDashboardData(uid, opts = {}) {
       if (cachedSubs.length) setSubscriptions(cachedSubs);
       if (cachedNotes.length) setNotes(cachedNotes);
     };
-    useCacheIfEmpty();
+    loadCacheIfEmpty();
 
     // --- Transactions: realtime, by createdAt (reliable)
     const txRef = collection(db, `users/${uid}/transactions`);
@@ -88,7 +88,7 @@ export default function useDashboardData(uid, opts = {}) {
       },
       (e) => {
         setError(e?.message || "Failed to load transactions");
-        useCacheIfEmpty();
+        loadCacheIfEmpty();
         setLoading(false);
       }
     );

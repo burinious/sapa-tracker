@@ -4,6 +4,7 @@ import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut,
   updateProfile,
 } from "firebase/auth";
@@ -126,6 +127,10 @@ export function AuthProvider({ children }) {
     await signOut(auth);
   };
 
+  const resetPassword = async (email) => {
+    await sendPasswordResetEmail(auth, email);
+  };
+
   // Update profile patch (merge) + immediate UI reflection via snapshot
   const updateUserProfile = async (patch) => {
     if (!user?.uid) throw new Error("Not logged in");
@@ -140,6 +145,7 @@ export function AuthProvider({ children }) {
       loading,
       register,
       login,
+      resetPassword,
       logout,
       updateUserProfile,
     }),

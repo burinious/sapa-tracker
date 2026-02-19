@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "611820320241",
+    "project_id": "sapa-tracker-ad0dd",
+    "storage_bucket": "sapa-tracker-ad0dd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611820320241:android:cc73569f8c9a7ca16c4050",
+        "android_client_info": {
+          "package_name": "com.burinious.sapatracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlM1z6UgxvuecHWZZ2KS3oNI1N2YfqKCA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:611820320241:android:01e91c5cc1becf976c4050",
+        "android_client_info": {
+          "package_name": "com.example.sapa_tracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlM1z6UgxvuecHWZZ2KS3oNI1N2YfqKCA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

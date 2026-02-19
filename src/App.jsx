@@ -3,11 +3,13 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { AuthProvider } from "./context/AuthContext";
+import PushNotificationsBootstrap from "./components/PushNotificationsBootstrap";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import AddTransaction from "./pages/AddTransaction";
@@ -28,9 +30,11 @@ export default function App() {
     <AuthProvider>
       <Router>
         <ToastContainer position="top-right" autoClose={2500} />
+        <PushNotificationsBootstrap />
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
           <Route
             element={

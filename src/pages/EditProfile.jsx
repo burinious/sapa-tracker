@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import SyncStatusPanel from "../components/SyncStatusPanel";
 import "../styles/app.css";
 
-import { ensureUserProfile, upsertUserProfile } from "../services/profileService";
+import { ensureUserProfile } from "../services/profileService";
 import {
   DEFAULT_BILLS_NG,
   mergeDefaults,
@@ -39,7 +39,7 @@ function readLegacyLocalProfile(uid) {
 }
 
 export default function EditProfile() {
-  const { user, profile } = useAuth();
+  const { user, profile, updateUserProfile } = useAuth();
   const uid = user?.uid;
 
   const [busy, setBusy] = useState(false);
@@ -231,7 +231,7 @@ export default function EditProfile() {
         sensitiveMode: !!form.sensitiveMode,
       };
 
-      await upsertUserProfile(uid, patch);
+      await updateUserProfile(patch);
       toast.success("Profile saved. SAPA A.I is now smarter.");
     } catch (e) {
       toast.error(e?.message || "Failed to save profile");

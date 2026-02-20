@@ -9,8 +9,9 @@ import {
   updateProfile,
 } from "firebase/auth";
 import { doc, onSnapshot, setDoc, serverTimestamp } from "firebase/firestore";
-import { DEFAULT_PROFILE, DEFAULT_BILLS_NG, mergeDefaults } from "../utils/profileSchema";
+import { mergeDefaults } from "../utils/profileSchema";
 import { syncLocalToFirestore } from "../services/syncLocalToFirestore";
+import { ensureUserProfile } from "../services/profileService";
 
 const AuthContext = createContext(null);
 
@@ -38,19 +39,15 @@ export function AuthProvider({ children }) {
         return;
       }
 
+      setLoading(true);
       const ref = doc(db, "users", u.uid);
 
-      // Seed/upgrade schema gently (merge-safe) then listen realtime
-      await setDoc(
-        ref,
-        {
-          ...DEFAULT_PROFILE,
-          fixedBills: DEFAULT_BILLS_NG,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      // Seed/upgrade schema without overwriting existing user values.
+      try {
+        await ensureUserProfile(u.uid);
+      } catch (seedErr) {
+        console.error("Profile seed/upgrade failed:", seedErr);
+      }
 
       unsubProfile = onSnapshot(
         ref,
@@ -134,9 +131,42 @@ export function AuthProvider({ children }) {
   // Update profile patch (merge) + immediate UI reflection via snapshot
   const updateUserProfile = useCallback(async (patch) => {
     if (!user?.uid) throw new Error("Not logged in");
+
+    const prevProfile = profile;
+    const nextProfile = mergeDefaults({
+      ...(profile || {}),
+      ...patch,
+      primaryIncome: {
+        ...(profile?.primaryIncome || {}),
+        ...(patch?.primaryIncome || {}),
+      },
+      salary: {
+        ...(profile?.salary || {}),
+        ...(patch?.salary || {}),
+      },
+      rent: {
+        ...(profile?.rent || {}),
+        ...(patch?.rent || {}),
+      },
+      spendingPrefs: {
+        ...(profile?.spendingPrefs || {}),
+        ...(patch?.spendingPrefs || {}),
+      },
+      notificationPrefs: {
+        ...(profile?.notificationPrefs || {}),
+        ...(patch?.notificationPrefs || {}),
+      },
+    });
+
+    setProfile(nextProfile);
     const ref = doc(db, "users", user.uid);
-    await setDoc(ref, { ...patch, updatedAt: serverTimestamp() }, { merge: true });
-  }, [user?.uid]);
+    try {
+      await setDoc(ref, { ...patch, updatedAt: serverTimestamp() }, { merge: true });
+    } catch (err) {
+      setProfile(prevProfile);
+      throw err;
+    }
+  }, [user?.uid, profile]);
 
   const value = useMemo(
     () => ({

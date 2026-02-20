@@ -14,3 +14,22 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## SAPA A.I backend AI mode
+
+SAPA A.I uses backend AI calls and keeps OpenAI hidden from the frontend experience.
+
+- Frontend shows only `SAPA A.I`
+- Backend endpoint calls OpenAI with app context
+- Local deterministic fallback still works if backend is unavailable
+- Auto-insight runs on page load using latest app data (cash, transactions, subscriptions, profile)
+
+To enable backend AI, add to `.env`:
+
+- `VITE_OPENAI_ENDPOINT=https://your-backend-endpoint`
+
+Optional:
+
+- `VITE_OPENAI_MODEL=gpt-5-mini`
+
+Then restart dev/build so Vite picks new env vars.

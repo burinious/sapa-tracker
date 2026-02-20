@@ -40,8 +40,8 @@ export default function ProfileHub() {
   const { profile, user, logout } = useAuth();
   const username =
     profile?.fullName ||
-    profile?.username ||
     user?.displayName ||
+    profile?.username ||
     (user?.email ? user.email.split("@")[0] : "") ||
     "User";
 

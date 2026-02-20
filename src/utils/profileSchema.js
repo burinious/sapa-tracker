@@ -94,6 +94,12 @@ export function safeDateStr(s) {
   return String(s).slice(0, 10);
 }
 
+function isBrandLikeUsername(v) {
+  const x = String(v || "").trim().toLowerCase();
+  if (!x) return false;
+  return x === "sapatracker" || x === "sapa tracker" || x === "sapa-tracker";
+}
+
 export function mergeDefaults(existing = {}) {
   const legacyName =
     (typeof existing.fullName === "string" && existing.fullName.trim()) ||
@@ -102,7 +108,6 @@ export function mergeDefaults(existing = {}) {
     "";
   const legacyUsername =
     (typeof existing.username === "string" && existing.username.trim()) ||
-    (typeof existing.storeName === "string" && existing.storeName.trim()) ||
     (typeof existing.email === "string" && existing.email.includes("@")
       ? existing.email.split("@")[0]
       : "");
@@ -190,6 +195,9 @@ export function mergeDefaults(existing = {}) {
     .filter((x) => x.source || x.amount > 0);
   p.fullName = String(p.fullName || legacyName || "").trim();
   p.username = String(p.username || legacyUsername || "").trim();
+  if (isBrandLikeUsername(p.username) && p.fullName) {
+    p.username = p.fullName;
+  }
 
   // fixedBills should be array; if missing, keep empty
   p.fixedBills = Array.isArray(existing.fixedBills) ? existing.fixedBills : (DEFAULT_PROFILE.fixedBills || []);

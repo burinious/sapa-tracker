@@ -142,8 +142,8 @@ export default function Dashboard() {
   const uid = fbUser?.uid;
   const username =
     profile?.fullName ||
-    profile?.username ||
     fbUser?.displayName ||
+    profile?.username ||
     (fbUser?.email ? fbUser.email.split("@")[0] : "User");
   const currency = "NGN";
   const txWindowDays = riskWindowDays === 30 ? 60 : 30;
@@ -431,7 +431,7 @@ export default function Dashboard() {
             <div className="st-card st-anim" style={{ "--d": "0.09s" }}>
               <div className="st-kicker">SAPA A.I</div>
               <div className="st-sub">
-                You are running the deterministic rules engine (no OpenAI). Next step: persistence + weekly recap.
+                SAPA A.I is data-driven and can use backend AI for deeper insight.
               </div>
             </div>
           ) : null}

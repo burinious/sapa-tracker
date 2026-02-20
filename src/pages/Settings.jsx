@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { applyAppTheme, getStoredAppTheme } from "../utils/theme";
 import { normalizeNotificationPrefs, PUSH_NOTIFICATION_AREAS } from "../utils/pushAreas";
 import { STUDENT_QUICK_LINKS, normalizeStudentQuickLinks, normalizeStudentQuickLinkOrder } from "../utils/studentQuickLinks";
+import { clearAllAppDataIncludingProfile, clearAllAppDataKeepProfile } from "../services/dataMaintenanceService";
 import "../styles/app.css";
 
 const DASHBOARD_KEY = "sapa-dashboard-settings";
@@ -67,6 +68,7 @@ export default function Settings() {
   const [quickLinks, setQuickLinks] = useState(initialDash.quickLinks);
   const [notificationPrefs, setNotificationPrefs] = useState(initialNotificationPrefs);
   const [busy, setBusy] = useState(false);
+  const [dataBusy, setDataBusy] = useState("");
 
   useEffect(() => {
     setNotificationPrefs(initialNotificationPrefs);
@@ -135,6 +137,51 @@ export default function Settings() {
 
   function toggleQuickLink(id) {
     setQuickLinks((prev) => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  function refreshAppData() {
+    if (!window.confirm("Refresh app data now?")) return;
+    toast.info("Refreshing app data...");
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 120);
+  }
+
+  async function resetAppDataKeepProfile() {
+    if (!user?.uid) return;
+    if (!window.confirm("Reset app data now? Profile/account will stay.")) return;
+    setDataBusy("reset");
+    try {
+      const out = await clearAllAppDataKeepProfile(user.uid);
+      toast.success(`App data reset. Cloud docs: ${out.deletedCloudDocs}, local keys: ${out.clearedLocalKeys}.`);
+      window.setTimeout(() => {
+        navigate("/dashboard");
+        window.location.reload();
+      }, 180);
+    } catch (err) {
+      toast.error(err?.message || "Failed to reset app data");
+    } finally {
+      setDataBusy("");
+    }
+  }
+
+  async function clearAllData() {
+    if (!user?.uid) return;
+    if (!window.confirm("Clear ALL data now? This includes profile preferences and app records.")) return;
+    if (!window.confirm("Final confirmation: this cannot be undone. Continue?")) return;
+    setDataBusy("clear");
+    try {
+      const out = await clearAllAppDataIncludingProfile(user.uid, { email: user.email || "" });
+      toast.success(`All data cleared. Cloud docs: ${out.deletedCloudDocs}, local keys: ${out.clearedLocalKeys}.`);
+      window.setTimeout(() => {
+        navigate("/dashboard");
+        window.location.reload();
+      }, 220);
+    } catch (err) {
+      toast.error(err?.message || "Failed to clear all data");
+    } finally {
+      setDataBusy("");
+    }
   }
 
   return (
@@ -266,6 +313,37 @@ export default function Settings() {
                   </span>
                 </label>
               ))}
+            </div>
+          </div>
+
+          <div className="section-card" id="data">
+            <h3 className="section-title">Data Management</h3>
+            <div className="small muted">
+              Manage app-wide data reset and clear actions. Each action asks for confirmation.
+            </div>
+            <div className="toolbar">
+              <button type="button" className="btn settings-secondary-btn" onClick={refreshAppData} disabled={!!dataBusy}>
+                Refresh App Data
+              </button>
+              <button
+                type="button"
+                className="btn settings-secondary-btn"
+                onClick={resetAppDataKeepProfile}
+                disabled={!!dataBusy || !user?.uid}
+              >
+                {dataBusy === "reset" ? "Resetting..." : "Reset App Data (Keep Profile)"}
+              </button>
+            </div>
+            <div className="section-card" style={{ marginTop: 10 }}>
+              <h4 style={{ margin: 0 }}>Danger Zone</h4>
+              <div className="small muted" style={{ marginTop: 6 }}>
+                Clear everything including profile preferences and local settings.
+              </div>
+              <div className="toolbar">
+                <button type="button" className="btn" onClick={clearAllData} disabled={!!dataBusy || !user?.uid}>
+                  {dataBusy === "clear" ? "Clearing..." : "Clear All Data"}
+                </button>
+              </div>
             </div>
           </div>
 

@@ -4,10 +4,13 @@ import {
   addDoc,
   deleteDoc,
   doc,
+  getDocs,
+  limit,
   onSnapshot,
   query,
   serverTimestamp,
-  setDoc
+  setDoc,
+  writeBatch,
 } from "firebase/firestore";
 
 export function listenShoppingItems(uid, cb, onErr) {
@@ -44,4 +47,24 @@ export async function updateShoppingItem(uid, id, patch) {
 
 export async function deleteShoppingItem(uid, id) {
   return deleteDoc(doc(db, "users", uid, "shoppingItems", id));
+}
+
+export async function clearShoppingItems(uid) {
+  if (!uid) return 0;
+  const ref = collection(db, "users", uid, "shoppingItems");
+  let total = 0;
+
+  while (true) {
+    const snap = await getDocs(query(ref, limit(400)));
+    if (snap.empty) break;
+
+    const batch = writeBatch(db);
+    snap.docs.forEach((row) => batch.delete(row.ref));
+    await batch.commit();
+    total += snap.size;
+
+    if (snap.size < 400) break;
+  }
+
+  return total;
 }

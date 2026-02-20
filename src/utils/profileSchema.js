@@ -20,6 +20,16 @@ export const DEFAULT_PROFILE = {
     payday: 25,           // day of month for monthly income (optional)
     nextPayDate: ""       // "YYYY-MM-DD" optional
   },
+  salary: {
+    amount: 0,
+    frequency: "monthly",
+    payday: 25,
+    nextPayDate: ""
+  },
+  otherIncomes: [
+    // Example:
+    // { source: "Design gigs", amount: 35000, frequency: "monthly", payday: 15, note: "Freelance", active: true }
+  ],
 
   // Rent (treat as VIP bill)
   rent: {
@@ -100,10 +110,84 @@ export function mergeDefaults(existing = {}) {
   // shallow merge + nested objects merge
   const p = { ...DEFAULT_PROFILE, ...existing };
 
-  p.primaryIncome = { ...DEFAULT_PROFILE.primaryIncome, ...(existing.primaryIncome || {}) };
+  p.primaryIncome = {
+    ...DEFAULT_PROFILE.primaryIncome,
+    ...(existing.primaryIncome || {}),
+    amount: Number(
+      existing?.primaryIncome?.amount ??
+      existing?.salary?.amount ??
+      DEFAULT_PROFILE.primaryIncome.amount
+    ) || 0,
+    frequency:
+      existing?.primaryIncome?.frequency ||
+      existing?.salary?.frequency ||
+      DEFAULT_PROFILE.primaryIncome.frequency,
+    payday: Math.max(
+      1,
+      Math.min(
+        31,
+        Math.floor(
+          Number(
+            existing?.primaryIncome?.payday ??
+            existing?.salary?.payday ??
+            DEFAULT_PROFILE.primaryIncome.payday
+          ) || DEFAULT_PROFILE.primaryIncome.payday
+        )
+      )
+    ),
+    nextPayDate: safeDateStr(
+      existing?.primaryIncome?.nextPayDate ??
+      existing?.salary?.nextPayDate ??
+      DEFAULT_PROFILE.primaryIncome.nextPayDate
+    ),
+  };
+  p.salary = {
+    ...DEFAULT_PROFILE.salary,
+    ...(existing.salary || {}),
+    amount: Number(
+      existing?.salary?.amount ??
+      existing?.primaryIncome?.amount ??
+      DEFAULT_PROFILE.salary.amount
+    ) || 0,
+    frequency:
+      existing?.salary?.frequency ||
+      existing?.primaryIncome?.frequency ||
+      DEFAULT_PROFILE.salary.frequency,
+    payday: Math.max(
+      1,
+      Math.min(
+        31,
+        Math.floor(
+          Number(
+            existing?.salary?.payday ??
+            existing?.primaryIncome?.payday ??
+            DEFAULT_PROFILE.salary.payday
+          ) || DEFAULT_PROFILE.salary.payday
+        )
+      )
+    ),
+    nextPayDate: safeDateStr(
+      existing?.salary?.nextPayDate ??
+      existing?.primaryIncome?.nextPayDate ??
+      DEFAULT_PROFILE.salary.nextPayDate
+    ),
+  };
   p.rent = { ...DEFAULT_PROFILE.rent, ...(existing.rent || {}) };
   p.spendingPrefs = { ...DEFAULT_PROFILE.spendingPrefs, ...(existing.spendingPrefs || {}) };
   p.notificationPrefs = { ...DEFAULT_PROFILE.notificationPrefs, ...(existing.notificationPrefs || {}) };
+  const rawOtherIncomes = Array.isArray(existing.otherIncomes)
+    ? existing.otherIncomes
+    : (Array.isArray(existing.otherIncome) ? existing.otherIncome : []);
+  p.otherIncomes = rawOtherIncomes
+    .map((x) => ({
+      source: String(x?.source || x?.name || "").trim(),
+      amount: normalizeNumber(x?.amount, 0),
+      frequency: x?.frequency || "monthly",
+      payday: normalizeDay(x?.payday ?? x?.day ?? 1, 1),
+      note: String(x?.note || "").trim(),
+      active: x?.active !== false,
+    }))
+    .filter((x) => x.source || x.amount > 0);
   p.fullName = String(p.fullName || legacyName || "").trim();
   p.username = String(p.username || legacyUsername || "").trim();
 

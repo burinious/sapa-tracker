@@ -137,9 +137,47 @@ export default function EditProfile() {
     });
   };
 
+  const setOtherIncome = (idx, patch) => {
+    setForm((prev) => {
+      const list = Array.isArray(prev.otherIncomes) ? [...prev.otherIncomes] : [];
+      list[idx] = { ...(list[idx] || {}), ...patch };
+      return { ...prev, otherIncomes: list };
+    });
+  };
+
+  const addOtherIncome = () => {
+    setForm((prev) => {
+      const list = Array.isArray(prev.otherIncomes) ? [...prev.otherIncomes] : [];
+      list.push({
+        source: "Side gig",
+        amount: 0,
+        frequency: "monthly",
+        payday: 1,
+        note: "",
+        active: true,
+      });
+      return { ...prev, otherIncomes: list };
+    });
+  };
+
+  const removeOtherIncome = (idx) => {
+    setForm((prev) => {
+      const list = Array.isArray(prev.otherIncomes) ? [...prev.otherIncomes] : [];
+      list.splice(idx, 1);
+      return { ...prev, otherIncomes: list };
+    });
+  };
+
   async function save() {
     try {
       setBusy(true);
+
+      const salary = {
+        amount: normalizeNumber(form.salary?.amount ?? form.primaryIncome?.amount, 0),
+        frequency: form.salary?.frequency || form.primaryIncome?.frequency || "monthly",
+        payday: normalizeDay(form.salary?.payday ?? form.primaryIncome?.payday ?? 25, 25),
+        nextPayDate: safeDateStr(form.salary?.nextPayDate ?? form.primaryIncome?.nextPayDate),
+      };
 
       const patch = {
         fullName: (form.fullName || "").trim(),
@@ -152,12 +190,17 @@ export default function EditProfile() {
 
         cashAtHand: normalizeNumber(form.cashAtHand, 0),
 
-        primaryIncome: {
-          amount: normalizeNumber(form.primaryIncome?.amount, 0),
-          frequency: form.primaryIncome?.frequency || "monthly",
-          payday: normalizeDay(form.primaryIncome?.payday ?? 25, 25),
-          nextPayDate: safeDateStr(form.primaryIncome?.nextPayDate),
-        },
+        // Keep both keys so old screens/services still work.
+        primaryIncome: salary,
+        salary,
+        otherIncomes: (Array.isArray(form.otherIncomes) ? form.otherIncomes : []).map((x) => ({
+          source: (x?.source || "").trim(),
+          amount: normalizeNumber(x?.amount, 0),
+          frequency: x?.frequency || "monthly",
+          payday: normalizeDay(x?.payday ?? 1, 1),
+          note: (x?.note || "").trim(),
+          active: x?.active !== false,
+        })).filter((x) => x.source || x.amount > 0),
 
         rent: {
           amount: normalizeNumber(form.rent?.amount, 0),
@@ -236,15 +279,43 @@ export default function EditProfile() {
           </section>
 
           <section className="section-card">
-            <h4 className="section-title">Primary Income</h4>
+            <h4 className="section-title">Salary (Primary Income)</h4>
             <div className="split-3">
-              <div><label className="small">Amount</label><input className="input" value={form.primaryIncome?.amount ?? 0} onChange={(e) => update("primaryIncome.amount", e.target.value)} inputMode="numeric" /></div>
-              <div><label className="small">Frequency</label><select className="input" value={form.primaryIncome?.frequency || "monthly"} onChange={(e) => update("primaryIncome.frequency", e.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
-              <div><label className="small">Payday (day of month)</label><input className="input" value={form.primaryIncome?.payday ?? 25} onChange={(e) => update("primaryIncome.payday", e.target.value)} inputMode="numeric" /></div>
+              <div><label className="small">Salary amount</label><input className="input" value={form.salary?.amount ?? form.primaryIncome?.amount ?? 0} onChange={(e) => update("salary.amount", e.target.value)} inputMode="numeric" /></div>
+              <div><label className="small">Frequency</label><select className="input" value={form.salary?.frequency || form.primaryIncome?.frequency || "monthly"} onChange={(e) => update("salary.frequency", e.target.value)}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+              <div><label className="small">Payday (day of month)</label><input className="input" value={form.salary?.payday ?? form.primaryIncome?.payday ?? 25} onChange={(e) => update("salary.payday", e.target.value)} inputMode="numeric" /></div>
             </div>
             <div style={{ marginTop: 10 }}>
               <label className="small">Next pay date (optional)</label>
-              <input className="input" type="date" value={form.primaryIncome?.nextPayDate || ""} onChange={(e) => update("primaryIncome.nextPayDate", e.target.value)} />
+              <input className="input" type="date" value={form.salary?.nextPayDate || form.primaryIncome?.nextPayDate || ""} onChange={(e) => update("salary.nextPayDate", e.target.value)} />
+            </div>
+          </section>
+
+          <section className="section-card">
+            <h4 className="section-title">Other Incomes (Gigs)</h4>
+            <p className="small muted">Add extra income streams like gigs, freelance or side hustles.</p>
+            <div className="toolbar">
+              <button className="btn" type="button" onClick={addOtherIncome}>+ Add Other Income</button>
+            </div>
+
+            <div className="list-stack">
+              {(form.otherIncomes || []).map((inc, idx) => (
+                <div key={idx} className="list-card">
+                  <div className="split-4">
+                    <div><label className="small">Source</label><input className="input" value={inc.source || ""} onChange={(e) => setOtherIncome(idx, { source: e.target.value })} placeholder="Design gigs, tutoring..." /></div>
+                    <div><label className="small">Amount</label><input className="input" value={inc.amount ?? 0} onChange={(e) => setOtherIncome(idx, { amount: e.target.value })} inputMode="numeric" /></div>
+                    <div><label className="small">Frequency</label><select className="input" value={inc.frequency || "monthly"} onChange={(e) => setOtherIncome(idx, { frequency: e.target.value })}><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></div>
+                    <div><label className="small">Pay day</label><input className="input" value={inc.payday ?? 1} onChange={(e) => setOtherIncome(idx, { payday: e.target.value })} inputMode="numeric" /></div>
+                  </div>
+                  <div className="split-2" style={{ marginTop: 10 }}>
+                    <div><label className="small">Note</label><input className="input" value={inc.note || ""} onChange={(e) => setOtherIncome(idx, { note: e.target.value })} placeholder="Optional note..." /></div>
+                    <div style={{ display: "flex", alignItems: "end", gap: 10, flexWrap: "wrap" }}>
+                      <label className="small"><input type="checkbox" checked={inc.active !== false} onChange={(e) => setOtherIncome(idx, { active: e.target.checked })} style={{ marginRight: 8 }} />Active</label>
+                      <button className="btn" type="button" onClick={() => removeOtherIncome(idx)}>Remove</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
 

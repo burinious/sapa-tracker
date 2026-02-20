@@ -50,6 +50,7 @@ export default function useDashboardData(uid, opts = {}) {
     riskWindowDays = 7,
     txWindowDays = 30,
     notesLimit = 8,
+    cashAtHand = undefined,
   } = opts;
 
   const [loading, setLoading] = useState(true);
@@ -158,8 +159,10 @@ export default function useDashboardData(uid, opts = {}) {
 
     const dueTotal = sumBy(dueSoon, (s) => s.amount);
 
-    // cash approximation
-    const cashApprox = mtdIncome - mtdExpense;
+    // cash approximation:
+    // prefer profile/app cash baseline when available, otherwise fallback to MTD net flow.
+    const hasCashBaseline = cashAtHand != null && Number.isFinite(Number(cashAtHand));
+    const cashApprox = hasCashBaseline ? safeNum(cashAtHand) : (mtdIncome - mtdExpense);
 
     // risk score
     const need = dueTotal + (avgDailySpend7 * riskWindowDays);
@@ -202,7 +205,7 @@ export default function useDashboardData(uid, opts = {}) {
       topCats,
       recent,
     };
-  }, [transactions, subscriptions, currency, riskWindowDays, txWindowDays]);
+  }, [transactions, subscriptions, currency, riskWindowDays, txWindowDays, cashAtHand]);
 
   return {
     loading,

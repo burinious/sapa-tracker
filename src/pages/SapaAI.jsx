@@ -3,7 +3,7 @@ import { FaRobot } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import useDashboardData from "../hooks/useDashboardData";
 import { sapaReply, SAPA_INTENTS_COUNT } from "../ai/sapaChatBrain";
-import { askSapaOpenAI, isOpenAIConfigured } from "../services/sapaOpenAI";
+import { askSapaOpenAI, isOpenAIConfigured, isSapaAIPremiumEnabled } from "../services/sapaOpenAI";
 import "../styles/app.css";
 
 const money = (n) => `NGN ${Math.round(Number(n || 0)).toLocaleString("en-NG")}`;
@@ -24,11 +24,13 @@ export default function SapaAI() {
     riskWindowDays: 7,
     txWindowDays: 30,
     notesLimit: 8,
+    cashAtHand: profile?.cashAtHand,
   });
 
   const cashAtHand = Number(profile?.cashAtHand ?? 0);
   const txCount = transactions?.length ?? 0;
   const subCount = subscriptions?.length ?? 0;
+  const premiumEnabled = isSapaAIPremiumEnabled();
   const aiBackendReady = isOpenAIConfigured();
 
   const [input, setInput] = useState("");
@@ -40,7 +42,7 @@ export default function SapaAI() {
         `I'm SAPA A.I.\n` +
         `I can use your app data (cash, transactions, bills, profile) for advice.\n` +
         `Try: "can I still pay rent?", "give me weekly insight", "what should I cut now?"\n` +
-        `(Local intents: ${SAPA_INTENTS_COUNT}. AI backend: ${aiBackendReady ? "connected" : "not configured"})`,
+        `(Local intents: ${SAPA_INTENTS_COUNT}. Premium AI: ${premiumEnabled ? (aiBackendReady ? "active" : "setup pending") : "off"})`,
     },
   ]);
 
@@ -184,7 +186,9 @@ export default function SapaAI() {
             <p className="page-sub">
               {aiBackendReady
                 ? "SAPA A.I (powered by OpenAI backend) using your in-app profile and live spending context."
-                : "SAPA A.I local fallback mode using your in-app data."}
+                : premiumEnabled
+                  ? "SAPA A.I premium is enabled but backend endpoint is not configured."
+                  : "SAPA A.I local mode using your in-app data."}
             </p>
 
             <div className="stats-row">
@@ -194,7 +198,7 @@ export default function SapaAI() {
               <div className="stat-pill">Avg/day: <b>{money(computed?.avgDailySpend7 ?? 0)}</b></div>
               <div className="stat-pill">Due soon: <b>{money(computed?.dueTotal ?? 0)}</b></div>
               <div className="stat-pill">Top leak: <b>{computed?.topCats?.[0]?.name ?? "-"}</b></div>
-              <div className="stat-pill">Engine: <b>{aiBackendReady ? "Cloud AI" : "Local Fallback"}</b></div>
+              <div className="stat-pill">Engine: <b>{aiBackendReady ? "Cloud AI" : "Local"}</b></div>
             </div>
 
             <div className="page-stack-md" style={{ marginTop: 14 }}>
@@ -214,7 +218,7 @@ export default function SapaAI() {
                 </button>
               </div>
 
-              {!aiBackendReady ? (
+              {premiumEnabled && !aiBackendReady ? (
                 <p className="small muted" style={{ marginTop: -6 }}>
                   AI backend is not configured yet. Add `VITE_OPENAI_ENDPOINT` and restart the app.
                 </p>

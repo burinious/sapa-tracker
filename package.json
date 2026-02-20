@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "ai:dev": "node --env-file=.env server/sapa-ai-backend.mjs",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",

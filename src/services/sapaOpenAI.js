@@ -1,3 +1,5 @@
+import { auth } from "../firebase/firebase";
+
 function n(x, fallback = 0) {
   const num = Number(x);
   return Number.isFinite(num) ? num : fallback;
@@ -138,18 +140,28 @@ function extractOutputText(payload) {
 }
 
 function endpointConfig() {
+  const premiumRaw = String(import.meta.env.VITE_SAPA_AI_PREMIUM_ENABLED || "").trim().toLowerCase();
+  const premiumEnabled = premiumRaw === "1" || premiumRaw === "true" || premiumRaw === "yes";
   const endpoint = String(import.meta.env.VITE_OPENAI_ENDPOINT || "").trim();
   const model = String(import.meta.env.VITE_OPENAI_MODEL || "gpt-5-mini").trim();
-  return { endpoint, model };
+  return { premiumEnabled, endpoint, model };
+}
+
+export function isSapaAIPremiumEnabled() {
+  const { premiumEnabled } = endpointConfig();
+  return premiumEnabled;
 }
 
 export function isOpenAIConfigured() {
-  const { endpoint } = endpointConfig();
-  return Boolean(endpoint);
+  const { premiumEnabled, endpoint } = endpointConfig();
+  return premiumEnabled && Boolean(endpoint);
 }
 
 export async function askSapaOpenAI({ message, history = [], ctx = {} }) {
-  const { endpoint, model } = endpointConfig();
+  const { premiumEnabled, endpoint, model } = endpointConfig();
+  if (!premiumEnabled) {
+    throw new Error("Premium AI is disabled.");
+  }
   if (!endpoint) {
     throw new Error("AI endpoint not configured. Add VITE_OPENAI_ENDPOINT.");
   }
@@ -162,8 +174,14 @@ export async function askSapaOpenAI({ message, history = [], ctx = {} }) {
     max_output_tokens: 420,
   };
 
+  const idToken = await auth.currentUser?.getIdToken?.();
+  if (!idToken) {
+    throw new Error("Session expired. Please log in again.");
+  }
+
   const headers = {
     "Content-Type": "application/json",
+    Authorization: `Bearer ${idToken}`,
   };
 
   const res = await fetch(url, {

@@ -48,6 +48,7 @@ export default function CoachPage({ coachInput }) {
     riskWindowDays: 7,
     txWindowDays: 30,
     notesLimit: 8,
+    cashAtHand: profile?.cashAtHand ?? finance?.cashAtHand,
   });
 
   const liveInput = useMemo(

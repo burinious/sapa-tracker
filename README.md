@@ -1,35 +1,59 @@
-# React + Vite
+# SapaTracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Student-focused personal finance app (web + Capacitor Android/iOS) with:
 
-Currently, two official plugins are available:
+- Dashboard, budgeting, subscriptions, house shopping, profile sync
+- SAPA A.I chat assistant with free local mode and optional premium cloud mode
+- Firebase Auth + Firestore per-user data isolation
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Environment setup
 
-## React Compiler
+1. Copy `.env.example` to `.env`.
+2. Fill your Firebase app values.
+3. Keep `.env` local only (it is git-ignored).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## SAPA A.I modes
 
-## Expanding the ESLint configuration
+- Free mode (default): local deterministic coaching, no OpenAI cost.
+- Premium mode: backend route calls OpenAI and uses live app data context.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Frontend variables:
 
-## SAPA A.I backend AI mode
-
-SAPA A.I uses backend AI calls and keeps OpenAI hidden from the frontend experience.
-
-- Frontend shows only `SAPA A.I`
-- Backend endpoint calls OpenAI with app context
-- Local deterministic fallback still works if backend is unavailable
-- Auto-insight runs on page load using latest app data (cash, transactions, subscriptions, profile)
-
-To enable backend AI, add to `.env`:
-
-- `VITE_OPENAI_ENDPOINT=https://your-backend-endpoint`
-
-Optional:
-
+- `VITE_SAPA_AI_PREMIUM_ENABLED=false|true`
+- `VITE_OPENAI_ENDPOINT=http://localhost:8787/api/sapa-ai`
 - `VITE_OPENAI_MODEL=gpt-5-mini`
 
-Then restart dev/build so Vite picks new env vars.
+Backend-only variables:
+
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL` (optional)
+- `FIREBASE_WEB_API_KEY`
+- `AI_BACKEND_ALLOW_ORIGINS` (comma-separated, no wildcard in prod)
+- `AI_BACKEND_RATE_LIMIT_MAX` (default 30)
+- `AI_BACKEND_RATE_LIMIT_WINDOW_MS` (default 60000)
+
+## Security defaults
+
+- Firestore rules allow users to access only `users/{uid}` and its subcollections.
+- AI backend now enforces:
+  - Firebase ID token verification (`Authorization: Bearer <idToken>`)
+  - rate limiting per user + IP
+  - restricted CORS allowlist
+  - body size and request bounds
+  - no-cache and hardening headers
+- OpenAI key stays backend-only.
+
+## Local run
+
+1. Terminal A:
+   - `npm run ai:dev`
+2. Terminal B:
+   - `npm run dev`
+3. Health check:
+   - `http://localhost:8787/health`
+
+## Build
+
+- Web build: `npm run build`
+- Android sync: `npx cap sync android`
+- Android APK (debug): `cd android && .\gradlew.bat assembleDebug`

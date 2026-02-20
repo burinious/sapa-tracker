@@ -196,6 +196,7 @@ export default function Dashboard() {
     riskWindowDays,
     txWindowDays,
     notesLimit: 8,
+    cashAtHand: profile?.cashAtHand,
   });
 
   const { notes: aiNotes } = useSapaAiNotes({

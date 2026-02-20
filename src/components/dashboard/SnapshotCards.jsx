@@ -19,7 +19,7 @@ export default function SnapshotCards({ cashApprox = 0, mtdIncome = 0, mtdExpens
 
   return (
     <div className="st-grid-2">
-      <Card icon={<FaWallet />} label="Cash (MTD approx)" value={fmtMoney(cashApprox, currency)} />
+      <Card icon={<FaWallet />} label="Cash outlook" value={fmtMoney(cashApprox, currency)} />
       <Card icon={<FaArrowUp />} label="Income (MTD)" value={fmtMoney(mtdIncome, currency)} />
       <Card icon={<FaArrowDown />} label="Expenses (MTD)" value={fmtMoney(mtdExpense, currency)} />
       <Card icon={<FaChartLine />} label="Net (MTD)" value={fmtMoney(net, currency)} />

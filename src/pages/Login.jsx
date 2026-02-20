@@ -6,7 +6,7 @@ import SapaLogo from "../components/brand/SapaLogo";
 import "../styles/app.css";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, setupError } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,6 +37,11 @@ export default function Login() {
           <h1 className="page-title">Welcome back</h1>
         </div>
         <p className="small page-sub">Login to continue</p>
+        {setupError ? (
+          <p className="note-warn">
+            Firebase setup error: {setupError}
+          </p>
+        ) : null}
 
         <form onSubmit={handleSubmit} className="page-stack-md" style={{ marginTop: 12 }}>
           <label className="small">Email</label>
@@ -48,7 +53,7 @@ export default function Login() {
             <Link className="small" to="/reset-password">Forgot password?</Link>
           </div>
 
-          <button className="btn" disabled={busy}>{busy ? "Logging in..." : "Login"}</button>
+          <button className="btn" disabled={busy || !!setupError}>{busy ? "Logging in..." : "Login"}</button>
         </form>
 
         <p className="small page-sub" style={{ marginTop: 12 }}>

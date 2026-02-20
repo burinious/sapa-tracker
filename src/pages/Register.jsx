@@ -6,7 +6,7 @@ import SapaLogo from "../components/brand/SapaLogo";
 import "../styles/app.css";
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, setupError } = useAuth();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -42,6 +42,11 @@ export default function Register() {
           <h1 className="page-title">Create Account</h1>
         </div>
         <p className="small page-sub">Set up your Sapa Tracker</p>
+        {setupError ? (
+          <p className="note-warn">
+            Firebase setup error: {setupError}
+          </p>
+        ) : null}
 
         <form onSubmit={handleSubmit} className="page-stack-md" style={{ marginTop: 12 }}>
           <label className="small">Username</label>
@@ -53,7 +58,7 @@ export default function Register() {
           <label className="small">Password</label>
           <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
 
-          <button className="btn" disabled={busy}>{busy ? "Creating..." : "Create account"}</button>
+          <button className="btn" disabled={busy || !!setupError}>{busy ? "Creating..." : "Create account"}</button>
         </form>
 
         <p className="small page-sub" style={{ marginTop: 12 }}>

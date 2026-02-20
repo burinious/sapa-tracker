@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { auth, db } from "../firebase/firebase";
+import { auth, db, firebaseInitError, isFirebaseReady } from "../firebase/firebase";
 import {
   onAuthStateChanged,
   signInWithEmailAndPassword,
@@ -19,9 +19,22 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const setupError = firebaseInitError || "";
+
+  const requireFirebase = useCallback(() => {
+    if (isFirebaseReady && auth && db) return;
+    throw new Error(setupError || "Firebase is not configured.");
+  }, [setupError]);
 
   // Realtime sync user + profile
   useEffect(() => {
+    if (!auth || !db || !isFirebaseReady) {
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      return undefined;
+    }
+
     let unsubProfile = null;
 
     const unsubAuth = onAuthStateChanged(auth, async (u) => {
@@ -96,6 +109,7 @@ export function AuthProvider({ children }) {
 
   // Auth actions (keep simple)
   const register = useCallback(async (email, password, displayName) => {
+    requireFirebase();
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     if (displayName) await updateProfile(cred.user, { displayName });
     if (cred?.user?.uid) {
@@ -113,23 +127,27 @@ export function AuthProvider({ children }) {
       );
     }
     return cred.user;
-  }, []);
+  }, [requireFirebase]);
 
   const login = useCallback(async (email, password) => {
+    requireFirebase();
     const cred = await signInWithEmailAndPassword(auth, email, password);
     return cred.user;
-  }, []);
+  }, [requireFirebase]);
 
   const logout = useCallback(async () => {
+    requireFirebase();
     await signOut(auth);
-  }, []);
+  }, [requireFirebase]);
 
   const resetPassword = useCallback(async (email) => {
+    requireFirebase();
     await sendPasswordResetEmail(auth, email);
-  }, []);
+  }, [requireFirebase]);
 
   // Update profile patch (merge) + immediate UI reflection via snapshot
   const updateUserProfile = useCallback(async (patch) => {
+    requireFirebase();
     if (!user?.uid) throw new Error("Not logged in");
 
     const prevProfile = profile;
@@ -166,20 +184,21 @@ export function AuthProvider({ children }) {
       setProfile(prevProfile);
       throw err;
     }
-  }, [user?.uid, profile]);
+  }, [user?.uid, profile, requireFirebase]);
 
   const value = useMemo(
     () => ({
       user,
       profile,
       loading,
+      setupError,
       register,
       login,
       resetPassword,
       logout,
       updateUserProfile,
     }),
-    [user, profile, loading, register, login, resetPassword, logout, updateUserProfile]
+    [user, profile, loading, setupError, register, login, resetPassword, logout, updateUserProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

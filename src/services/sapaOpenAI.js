@@ -174,7 +174,7 @@ export async function askSapaOpenAI({ message, history = [], ctx = {} }) {
     max_output_tokens: 420,
   };
 
-  const idToken = await auth.currentUser?.getIdToken?.();
+  const idToken = await auth?.currentUser?.getIdToken?.();
   if (!idToken) {
     throw new Error("Session expired. Please log in again.");
   }

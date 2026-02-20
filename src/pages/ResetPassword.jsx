@@ -6,7 +6,7 @@ import SapaLogo from "../components/brand/SapaLogo";
 import "../styles/app.css";
 
 export default function ResetPassword() {
-  const { resetPassword } = useAuth();
+  const { resetPassword, setupError } = useAuth();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
@@ -36,6 +36,11 @@ export default function ResetPassword() {
           <h1 className="page-title">Reset Password</h1>
         </div>
         <p className="small page-sub">Enter your account email to receive a reset link.</p>
+        {setupError ? (
+          <p className="note-warn">
+            Firebase setup error: {setupError}
+          </p>
+        ) : null}
 
         <form onSubmit={handleSubmit} className="page-stack-md" style={{ marginTop: 12 }}>
           <label className="small">Email</label>
@@ -46,7 +51,7 @@ export default function ResetPassword() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button className="btn" disabled={busy}>
+          <button className="btn" disabled={busy || !!setupError}>
             {busy ? "Sending..." : "Send reset link"}
           </button>
         </form>

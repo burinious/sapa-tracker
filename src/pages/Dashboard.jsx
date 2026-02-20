@@ -133,6 +133,12 @@ export default function Dashboard() {
   const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
+    if (!auth) {
+      setAuthTimeout(true);
+      setAuthLoading(false);
+      return undefined;
+    }
+
     const timeoutId = setTimeout(() => {
       setAuthTimeout(true);
       setAuthLoading(false);

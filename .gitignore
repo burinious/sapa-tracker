@@ -16,6 +16,8 @@ dist-ssr
 !.env.example
 android/.gradle
 android/local.properties
+android/key.properties
+android/keystore/
 android/**/build/
 ios/App/build/
 *.bak

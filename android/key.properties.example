@@ -1,0 +1,4 @@
+storeFile=keystore/sapatracker-upload.jks
+storePassword=change_me
+keyAlias=sapatracker_upload
+keyPassword=change_me

@@ -19,6 +19,10 @@ import Subscriptions from "./pages/Subscriptions";
 import EditProfile from "./pages/EditProfile";
 import SapaAI from "./pages/SapaAI";
 import Settings from "./pages/Settings";
+import MenuPage from "./pages/Menu";
+import ProfileHub from "./pages/ProfileHub";
+import SecurityPage from "./pages/SecurityPage";
+import NotificationsPage from "./pages/Notifications";
 
 import CoachPage from "./features/coach/CoachPage";
 import EntriesPage from "./features/entries/EntriesPage";
@@ -61,6 +65,10 @@ export default function App() {
             <Route path="/house-shopping" element={<HouseShopping />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
             <Route path="/ai" element={<SapaAI />} />
+            <Route path="/menu" element={<MenuPage />} />
+            <Route path="/profile" element={<ProfileHub />} />
+            <Route path="/security" element={<SecurityPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/edit-profile" element={<EditProfile />} />
           </Route>

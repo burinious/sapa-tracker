@@ -13,11 +13,11 @@ export default function DashboardControlBar({
     <div className="st-card st-controls">
       <div className="st-controls-top">
         <div>
-          <div className="st-kicker">Dashboard Control</div>
-          <div className="st-sub">Tune the window and open full settings.</div>
+          <div className="st-kicker">Money Window</div>
+          <div className="st-sub">Switch your spend horizon and personalize what you see.</div>
         </div>
         <button className="st-mini" type="button" onClick={onOpenSettings}>
-          Open Settings
+          Customize
         </button>
       </div>
 

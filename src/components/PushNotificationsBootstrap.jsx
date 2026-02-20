@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase/firebase";
 import { getEnabledPushAreas, normalizeNotificationPrefs } from "../utils/pushAreas";
+import { addNotification } from "../utils/localNotifications";
 
 export default function PushNotificationsBootstrap() {
   const { user, profile } = useAuth();
@@ -84,6 +85,14 @@ export default function PushNotificationsBootstrap() {
         await PushNotifications.addListener("pushNotificationReceived", (notification) => {
           const title = notification?.title || "SapaTracker";
           const body = notification?.body || "You have a new notification";
+          const route = notification?.data?.route || "/dashboard";
+          addNotification(user.uid, {
+            title,
+            body,
+            route,
+            source: "push",
+            read: false,
+          });
           toast.info(`${title}: ${body}`);
         });
 

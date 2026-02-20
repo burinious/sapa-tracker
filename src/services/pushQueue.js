@@ -1,5 +1,6 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import { addNotification } from "../utils/localNotifications";
 
 function keyOf(uid, dedupeKey) {
   return `sapa_push_sent_${uid}_${dedupeKey}`;
@@ -37,6 +38,14 @@ export async function queuePushNotification(uid, payload, periodKey) {
     periodKey,
     status: "pending",
     createdAt: serverTimestamp(),
+  });
+
+  addNotification(uid, {
+    title: payload.title || "SapaTracker",
+    body: payload.body || "",
+    route: payload.route || "/dashboard",
+    source: "queue",
+    read: false,
   });
 
   setSlot(uid, payload.dedupeKey, periodKey);

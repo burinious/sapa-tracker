@@ -35,9 +35,12 @@ export async function getMonthlyBudget(uid, month) {
   const ref = doc(db, "users", uid, "budgets", month);
   const snap = await tryFirestore(() => getDoc(ref));
   if (snap) {
-    const data = snap.exists() ? snap.data() : null;
-    if (data) mergeBudgetFromRemote(uid, month, data);
-    return data;
+    if (snap.exists()) {
+      const data = snap.data();
+      mergeBudgetFromRemote(uid, month, data);
+      return data;
+    }
+    return getMonthlyBudgetLocal(uid, month);
   }
   return getMonthlyBudgetLocal(uid, month);
 }

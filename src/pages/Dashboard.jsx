@@ -6,6 +6,7 @@ import DashboardHeader from "../components/dashboard/DashboardHeader";
 import DashboardControlBar from "../components/dashboard/DashboardControlBar";
 import SapaRiskMeter from "../components/dashboard/SapaRiskMeter";
 import QuickAddRow from "../components/dashboard/QuickAddRow";
+import StudentQuickLinks from "../components/dashboard/StudentQuickLinks";
 import PressureThisWeek from "../components/dashboard/PressureThisWeek";
 import AINotesCarousel from "../components/dashboard/AINotesCarousel";
 import SnapshotCards from "../components/dashboard/SnapshotCards";
@@ -18,6 +19,12 @@ import ActionCenterCard from "../components/dashboard/ActionCenterCard";
 import useDashboardData from "../hooks/useDashboardData";
 import useSapaAiNotes from "../hooks/useSapaAiNotes";
 import { DASHBOARD_PRESETS, mergeWidgets } from "../utils/dashboardPresets";
+import {
+  STUDENT_QUICK_LINK_DEFAULTS,
+  STUDENT_QUICK_LINK_ORDER,
+  normalizeStudentQuickLinks,
+  normalizeStudentQuickLinkOrder,
+} from "../utils/studentQuickLinks";
 
 import { auth } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -118,8 +125,11 @@ export default function Dashboard() {
   const [dashboardTheme, setDashboardTheme] = useState(DEFAULT_DASHBOARD_THEME);
   const [widgetOverrides, setWidgetOverrides] = useState({});
   const [midOrder, setMidOrder] = useState(MID_WIDGET_KEYS);
+  const [quickLinks, setQuickLinks] = useState(STUDENT_QUICK_LINK_DEFAULTS);
+  const [quickLinkOrder, setQuickLinkOrder] = useState(STUDENT_QUICK_LINK_ORDER);
   const [draggedWidget, setDraggedWidget] = useState("");
   const [dragTargetWidget, setDragTargetWidget] = useState("");
+  const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -140,34 +150,41 @@ export default function Dashboard() {
 
   useEffect(() => {
     const raw = localStorage.getItem("sapa-dashboard-settings");
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed?.riskWindowDays != null) {
-        setRiskWindowDays(normalizeRiskWindow(parsed.riskWindowDays));
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed?.riskWindowDays != null) {
+          setRiskWindowDays(normalizeRiskWindow(parsed.riskWindowDays));
+        }
+        if (parsed?.mode) setDashboardMode(normalizeMode(parsed.mode));
+        if (parsed?.theme) setDashboardTheme(normalizeTheme(parsed.theme));
+        if (parsed?.overrides && typeof parsed.overrides === "object") {
+          setWidgetOverrides(parsed.overrides);
+        }
+        if (Array.isArray(parsed?.midOrder)) {
+          setMidOrder(normalizeOrder(parsed.midOrder));
+        }
+        setQuickLinks(normalizeStudentQuickLinks(parsed?.quickLinks));
+        setQuickLinkOrder(normalizeStudentQuickLinkOrder(parsed?.quickLinkOrder));
+      } catch {
+        // ignore invalid local settings
       }
-      if (parsed?.mode) setDashboardMode(normalizeMode(parsed.mode));
-      if (parsed?.theme) setDashboardTheme(normalizeTheme(parsed.theme));
-      if (parsed?.overrides && typeof parsed.overrides === "object") {
-        setWidgetOverrides(parsed.overrides);
-      }
-      if (Array.isArray(parsed?.midOrder)) {
-        setMidOrder(normalizeOrder(parsed.midOrder));
-      }
-    } catch {
-      // ignore invalid local settings
     }
+    setSettingsReady(true);
   }, []);
 
   useEffect(() => {
+    if (!settingsReady) return;
     localStorage.setItem("sapa-dashboard-settings", JSON.stringify({
       riskWindowDays,
       mode: dashboardMode,
       theme: dashboardTheme,
       overrides: widgetOverrides,
       midOrder,
+      quickLinks,
+      quickLinkOrder,
     }));
-  }, [riskWindowDays, dashboardMode, dashboardTheme, widgetOverrides, midOrder]);
+  }, [riskWindowDays, dashboardMode, dashboardTheme, widgetOverrides, midOrder, quickLinks, quickLinkOrder, settingsReady]);
 
   const visibleWidgets = useMemo(() => {
     const preset = DASHBOARD_PRESETS[dashboardMode]?.widgets || {};
@@ -243,6 +260,11 @@ export default function Dashboard() {
     setMidOrder((prev) => normalizeOrder(reorderByStep(prev, key, step)));
   };
 
+  const swapQuickLink = (draggedId, targetId) => {
+    if (!draggedId || !targetId || draggedId === targetId) return;
+    setQuickLinkOrder((prev) => normalizeStudentQuickLinkOrder(reorder(prev, draggedId, targetId)));
+  };
+
   if (authLoading) {
     return (
       <div className="st-wrap">
@@ -272,20 +294,19 @@ export default function Dashboard() {
       <div className="st-grid">
         <div className="st-col st-col-left">
           <div className="st-anim" style={{ "--d": "0.02s" }}>
-            <DashboardHeader username={username} dueCount={dueCount} riskWindowDays={riskWindowDays} />
-          </div>
-
-          <div className="st-anim" style={{ "--d": "0.04s" }}>
-            <DashboardControlBar
+            <DashboardHeader
+              username={username}
+              dueCount={dueCount}
               riskWindowDays={riskWindowDays}
-              onChangeWindow={setRiskWindowDays}
-              mode={dashboardMode}
-              theme={dashboardTheme}
-              onOpenSettings={() => navigate("/settings")}
+              cashApprox={computed?.cashApprox || 0}
+              mtdIncome={computed?.mtdIncome || 0}
+              mtdExpense={computed?.mtdExpense || 0}
+              score={computed?.score || 0}
+              currency={currency}
             />
           </div>
 
-          <div className="st-anim" style={{ "--d": "0.06s" }}>
+          <div className="st-anim" style={{ "--d": "0.04s" }}>
             <SapaRiskMeter
               score={leftProps.score}
               zone={leftProps.zone}
@@ -297,12 +318,31 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="st-anim" style={{ "--d": "0.08s" }}>
+          <div className="st-anim" style={{ "--d": "0.05s" }}>
             <SnapshotCards
               currency={currency}
               cashApprox={computed?.cashApprox || 0}
               mtdIncome={computed?.mtdIncome || 0}
               mtdExpense={computed?.mtdExpense || 0}
+            />
+          </div>
+
+          <div className="st-anim" style={{ "--d": "0.06s" }}>
+            <DashboardControlBar
+              riskWindowDays={riskWindowDays}
+              onChangeWindow={setRiskWindowDays}
+              mode={dashboardMode}
+              theme={dashboardTheme}
+              onOpenSettings={() => navigate("/settings")}
+            />
+          </div>
+
+          <div className="st-anim" style={{ "--d": "0.07s" }}>
+            <StudentQuickLinks
+              computed={computed}
+              visibility={quickLinks}
+              order={quickLinkOrder}
+              onSwap={swapQuickLink}
             />
           </div>
 

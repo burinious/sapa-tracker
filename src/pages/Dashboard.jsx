@@ -120,6 +120,7 @@ export default function Dashboard() {
   const { profile } = useAuth();
   const [fbUser, setFbUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authTimeout, setAuthTimeout] = useState(false);
   const [riskWindowDays, setRiskWindowDays] = useState(7);
   const [dashboardMode, setDashboardMode] = useState(DEFAULT_DASHBOARD_MODE);
   const [dashboardTheme, setDashboardTheme] = useState(DEFAULT_DASHBOARD_THEME);
@@ -132,11 +133,21 @@ export default function Dashboard() {
   const [settingsReady, setSettingsReady] = useState(false);
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setAuthTimeout(true);
+      setAuthLoading(false);
+    }, 8000);
+
     const unsub = onAuthStateChanged(auth, (u) => {
+      clearTimeout(timeoutId);
       setFbUser(u || null);
       setAuthLoading(false);
+      setAuthTimeout(false);
     });
-    return () => unsub();
+    return () => {
+      clearTimeout(timeoutId);
+      unsub();
+    };
   }, []);
 
   const uid = fbUser?.uid;
@@ -284,7 +295,11 @@ export default function Dashboard() {
         <div className="st-card">
           <div className="st-kicker">Auth</div>
           <div className="st-title">You are not logged in</div>
-          <div className="st-sub">Go back to login to access your dashboard.</div>
+          <div className="st-sub">
+            {authTimeout
+              ? "Session check timed out. Please log in again. If this keeps happening, verify Vercel env vars and Firebase authorized domains."
+              : "Go back to login to access your dashboard."}
+          </div>
         </div>
       </div>
     );

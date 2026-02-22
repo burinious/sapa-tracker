@@ -2,6 +2,15 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
+const fallbackFirebaseConfig = {
+  apiKey: "AIzaSyATGitTQBdTKwdofWHiSRbHiAVieCF3dXk",
+  authDomain: "sapa-tracker-c5886.firebaseapp.com",
+  projectId: "sapa-tracker-c5886",
+  storageBucket: "sapa-tracker-c5886.firebasestorage.app",
+  messagingSenderId: "1023110880932",
+  appId: "1:1023110880932:web:bed370ffece0ee4fe69031",
+};
+
 const rawFirebaseEnv = {
   apiKey: String(import.meta.env.VITE_FIREBASE_API_KEY || "").trim(),
   authDomain: String(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "").trim(),
@@ -12,12 +21,12 @@ const rawFirebaseEnv = {
 };
 
 const firebaseConfig = {
-  apiKey: rawFirebaseEnv.apiKey,
-  authDomain: rawFirebaseEnv.authDomain,
-  projectId: rawFirebaseEnv.projectId,
-  storageBucket: rawFirebaseEnv.storageBucket,
-  messagingSenderId: rawFirebaseEnv.messagingSenderId,
-  appId: rawFirebaseEnv.appId,
+  apiKey: rawFirebaseEnv.apiKey || fallbackFirebaseConfig.apiKey,
+  authDomain: rawFirebaseEnv.authDomain || fallbackFirebaseConfig.authDomain,
+  projectId: rawFirebaseEnv.projectId || fallbackFirebaseConfig.projectId,
+  storageBucket: rawFirebaseEnv.storageBucket || fallbackFirebaseConfig.storageBucket,
+  messagingSenderId: rawFirebaseEnv.messagingSenderId || fallbackFirebaseConfig.messagingSenderId,
+  appId: rawFirebaseEnv.appId || fallbackFirebaseConfig.appId,
 };
 
 const requiredEnvMap = {
@@ -33,15 +42,22 @@ const missingFirebaseEnv = Object.entries(requiredEnvMap)
   .filter(([, value]) => !String(value || "").trim())
   .map(([key]) => key);
 
+const missingFirebaseConfig = Object.entries(firebaseConfig)
+  .filter(([, value]) => !String(value || "").trim())
+  .map(([key]) => key);
+
 let app = null;
 let db = null;
 let auth = null;
 let firebaseInitError = "";
 let firebaseInitWarning = "";
 
-if (missingFirebaseEnv.length) {
-  firebaseInitError = `Missing Firebase env vars: ${missingFirebaseEnv.join(", ")}.`;
+if (missingFirebaseConfig.length) {
+  firebaseInitError = `Missing Firebase config values: ${missingFirebaseConfig.join(", ")}.`;
 } else {
+  if (missingFirebaseEnv.length) {
+    firebaseInitWarning = `Using built-in Firebase fallback config for missing env vars: ${missingFirebaseEnv.join(", ")}.`;
+  }
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);

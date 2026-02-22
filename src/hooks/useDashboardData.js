@@ -44,6 +44,40 @@ function isoOfDate(d) {
   return format(d, "yyyy-MM-dd");
 }
 
+function toDate(value) {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value === "string") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const d = new Date(`${value}T00:00:00`);
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value?.toDate === "function") {
+    const d = value.toDate();
+    return d instanceof Date && !Number.isNaN(d.getTime()) ? d : null;
+  }
+  if (Number.isFinite(Number(value?.seconds))) {
+    const d = new Date(Number(value.seconds) * 1000);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+function txDateISO(tx) {
+  const primary = toDate(tx?.date);
+  if (primary) return isoOfDate(primary);
+  const fallback = toDate(tx?.createdAt);
+  if (fallback) return isoOfDate(fallback);
+  return "";
+}
+
 export default function useDashboardData(uid, opts = {}) {
   const {
     currency = "NGN",
@@ -128,13 +162,16 @@ export default function useDashboardData(uid, opts = {}) {
   }, [uid, notesLimit]);
 
   const computed = useMemo(() => {
-    // ----- MTD using `date` if it exists as string, otherwise fallback to createdAt ordering
     const now = new Date();
     const monthStartISO = format(new Date(now.getFullYear(), now.getMonth(), 1), "yyyy-MM-dd");
 
-    const txHasDate = transactions.some((t) => typeof t.date === "string");
+    const txNormalized = transactions.map((t) => ({
+      ...t,
+      _dateISO: txDateISO(t),
+    }));
+    const txHasDate = txNormalized.some((t) => !!t._dateISO);
     const txMTD = txHasDate
-      ? transactions.filter((t) => (t.date || "") >= monthStartISO)
+      ? txNormalized.filter((t) => (t._dateISO || "") >= monthStartISO)
       : transactions; // fallback: treat loaded set as "recent"
 
     const mtdIncome = sumBy(txMTD.filter((t) => t.type === "income"), (t) => t.amount);
@@ -142,8 +179,8 @@ export default function useDashboardData(uid, opts = {}) {
 
     const lastRiskISO = isoOfDate(subDays(new Date(), riskWindowDays));
     const txRiskWindow = txHasDate
-      ? transactions.filter((t) => (t.date || "") >= lastRiskISO)
-      : transactions.slice(0, 50);
+      ? txNormalized.filter((t) => (t._dateISO || "") >= lastRiskISO)
+      : txNormalized.slice(0, 50);
 
     const spendRiskWindow = sumBy(txRiskWindow.filter((t) => t.type === "expense"), (t) => t.amount);
     const avgDailySpend7 = spendRiskWindow / Math.max(riskWindowDays, 1);
@@ -177,8 +214,8 @@ export default function useDashboardData(uid, opts = {}) {
     // Top categories (selected tx window)
     const lastTxWindowISO = isoOfDate(subDays(new Date(), txWindowDays));
     const txTopWindow = txHasDate
-      ? transactions.filter((t) => (t.date || "") >= lastTxWindowISO)
-      : transactions.slice(0, 120);
+      ? txNormalized.filter((t) => (t._dateISO || "") >= lastTxWindowISO)
+      : txNormalized.slice(0, 120);
     const exp7 = txTopWindow.filter((t) => t.type === "expense");
     const byCat = groupBy(exp7, (t) => t.categoryName || "Other");
     const topCats = Array.from(byCat.entries())

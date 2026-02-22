@@ -43,6 +43,19 @@ Backend-only variables:
   - no-cache and hardening headers
 - OpenAI key stays backend-only.
 
+## Android SMS auto-import
+
+- Android-only SMS listener (Capacitor native plugin) for:
+  - OPay
+  - PalmPay
+  - Moniepoint
+- Requests `READ_SMS` and `RECEIVE_SMS` runtime permissions safely.
+- Parses amount, transaction direction (credit/debit), date, and reference.
+- Writes imported transactions to:
+  - `users/{uid}/transactions/{transactionId}`
+- Duplicate protection:
+  - `users/{uid}/sms_import_keys/{fingerprint}` via Firestore transaction.
+
 ## Local run
 
 1. Terminal A:

@@ -1,10 +1,45 @@
 import React, { useMemo } from "react";
-import { addDays, format, subDays } from "date-fns";
+import { addDays, format, isValid, subDays } from "date-fns";
 import { fmtMoney } from "../../utils/money";
 
 function safeNum(x) {
   const n = Number(x);
   return Number.isFinite(n) ? n : 0;
+}
+
+function txDateKey(rawDate) {
+  if (typeof rawDate === "string") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) return rawDate;
+    const parsed = new Date(rawDate);
+    return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : "";
+  }
+
+  if (rawDate instanceof Date) {
+    return isValid(rawDate) ? format(rawDate, "yyyy-MM-dd") : "";
+  }
+
+  if (typeof rawDate === "number") {
+    const parsed = new Date(rawDate);
+    return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : "";
+  }
+
+  if (rawDate && typeof rawDate?.toDate === "function") {
+    const parsed = rawDate.toDate();
+    return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : "";
+  }
+
+  if (rawDate && typeof rawDate === "object" && Number.isFinite(Number(rawDate?.seconds))) {
+    const parsed = new Date(Number(rawDate.seconds) * 1000);
+    return isValid(parsed) ? format(parsed, "yyyy-MM-dd") : "";
+  }
+
+  return "";
+}
+
+function txDayKey(tx) {
+  const primary = txDateKey(tx?.date);
+  if (primary) return primary;
+  return txDateKey(tx?.createdAt);
 }
 
 function buildSeries(transactions = [], days = 14) {
@@ -15,7 +50,7 @@ function buildSeries(transactions = [], days = 14) {
   }
 
   for (const tx of transactions) {
-    const d = typeof tx?.date === "string" ? tx.date : "";
+    const d = txDayKey(tx);
     if (!byDate.has(d)) continue;
     const amt = safeNum(tx.amount);
     const signed = tx.type === "income" ? amt : -amt;

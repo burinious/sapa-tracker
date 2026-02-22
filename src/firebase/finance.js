@@ -47,7 +47,10 @@ export async function addTransactionAndUpdateCash(uid, payload) {
       categoryId: payload.categoryId || "",
       categoryName: payload.categoryName || "",
       note: payload.note || "",
-      date: payload.date instanceof Date ? Timestamp.fromDate(payload.date) : Timestamp.now(),
+      date: payload.date instanceof Date
+        ? payload.date.toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+      dateAt: payload.date instanceof Date ? Timestamp.fromDate(payload.date) : Timestamp.now(),
       createdAt: serverTimestamp(),
     });
   });

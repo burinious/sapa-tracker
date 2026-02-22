@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/AuthContext";
 import CoachPushTriggers from "./components/CoachPushTriggers";
 import PushNotificationsBootstrap from "./components/PushNotificationsBootstrap";
+import SmsImportBootstrap from "./components/SmsImportBootstrap";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 
@@ -36,6 +37,7 @@ export default function App() {
       <Router>
         <ToastContainer position="top-right" autoClose={2500} />
         <PushNotificationsBootstrap />
+        <SmsImportBootstrap />
         <CoachPushTriggers />
         <Routes>
           <Route path="/" element={<Login />} />

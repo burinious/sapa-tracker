@@ -2,15 +2,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-const FALLBACK_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyATGitTQBdTKwdofWHiSRbHiAVieCF3dXk",
-  authDomain: "sapa-tracker-c5886.firebaseapp.com",
-  projectId: "sapa-tracker-c5886",
-  storageBucket: "sapa-tracker-c5886.firebasestorage.app",
-  messagingSenderId: "1023110880932",
-  appId: "1:1023110880932:web:bed370ffece0ee4fe69031",
-};
-
 const rawFirebaseEnv = {
   apiKey: String(import.meta.env.VITE_FIREBASE_API_KEY || "").trim(),
   authDomain: String(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "").trim(),
@@ -21,12 +12,12 @@ const rawFirebaseEnv = {
 };
 
 const firebaseConfig = {
-  apiKey: rawFirebaseEnv.apiKey || FALLBACK_FIREBASE_CONFIG.apiKey,
-  authDomain: rawFirebaseEnv.authDomain || FALLBACK_FIREBASE_CONFIG.authDomain,
-  projectId: rawFirebaseEnv.projectId || FALLBACK_FIREBASE_CONFIG.projectId,
-  storageBucket: rawFirebaseEnv.storageBucket || FALLBACK_FIREBASE_CONFIG.storageBucket,
-  messagingSenderId: rawFirebaseEnv.messagingSenderId || FALLBACK_FIREBASE_CONFIG.messagingSenderId,
-  appId: rawFirebaseEnv.appId || FALLBACK_FIREBASE_CONFIG.appId,
+  apiKey: rawFirebaseEnv.apiKey,
+  authDomain: rawFirebaseEnv.authDomain,
+  projectId: rawFirebaseEnv.projectId,
+  storageBucket: rawFirebaseEnv.storageBucket,
+  messagingSenderId: rawFirebaseEnv.messagingSenderId,
+  appId: rawFirebaseEnv.appId,
 };
 
 const requiredEnvMap = {
@@ -49,15 +40,15 @@ let firebaseInitError = "";
 let firebaseInitWarning = "";
 
 if (missingFirebaseEnv.length) {
-  firebaseInitWarning = `Missing Firebase env vars: ${missingFirebaseEnv.join(", ")}. Using app fallback config.`;
-}
-
-try {
-  app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  auth = getAuth(app);
-} catch (err) {
-  firebaseInitError = err?.message || "Firebase initialization failed.";
+  firebaseInitError = `Missing Firebase env vars: ${missingFirebaseEnv.join(", ")}.`;
+} else {
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+  } catch (err) {
+    firebaseInitError = err?.message || "Firebase initialization failed.";
+  }
 }
 
 if (firebaseInitError) {

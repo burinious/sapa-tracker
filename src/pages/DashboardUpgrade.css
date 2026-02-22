@@ -151,6 +151,61 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.st-dashboard-top-banner{
+  grid-column: 1 / -1;
+}
+
+.st-install-banner{
+  display: grid;
+  gap: 12px;
+  border-color: rgba(14,134,184,0.28);
+  background:
+    linear-gradient(140deg, rgba(255,255,255,0.95), rgba(227,246,255,0.88) 52%, rgba(255,239,222,0.85));
+}
+
+.st-install-copy{
+  display: grid;
+  gap: 3px;
+}
+
+.st-install-actions{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.st-install-cta{
+  border-color: rgba(15,132,182,0.38);
+  color: #0f4f75;
+  background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(216,243,255,0.84));
+}
+
+.st-install-dismiss{
+  border-color: rgba(15,106,154,0.24);
+  color: var(--st-sub);
+}
+
+.st-theme-midnight .st-install-banner,
+.st-theme-obsidian .st-install-banner{
+  border-color: rgba(131,168,242,0.34);
+  background:
+    linear-gradient(145deg, rgba(25,37,68,0.95), rgba(20,33,60,0.93) 56%, rgba(27,40,68,0.92));
+}
+
+.st-theme-midnight .st-install-cta,
+.st-theme-obsidian .st-install-cta{
+  border-color: rgba(131,168,242,0.42);
+  color: #dbe8ff;
+  background: rgba(22,35,66,0.92);
+}
+
+.st-theme-midnight .st-install-dismiss,
+.st-theme-obsidian .st-install-dismiss{
+  border-color: rgba(131,168,242,0.30);
+  color: rgba(219,230,255,0.82);
+  background: rgba(16,26,52,0.90);
+}
+
 .st-mid,
 .st-col{
   display: grid;
@@ -1314,6 +1369,13 @@ button.st-chip:hover{
   .st-loading-title{
     font-size: 15px;
   }
+  .st-install-actions{
+    gap: 7px;
+  }
+  .st-install-actions .st-mini{
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 @media (min-width: 360px) and (max-width: 519px){
@@ -1358,6 +1420,10 @@ button.st-chip:hover{
   .st-loader-orbit{
     width: 46px;
     height: 46px;
+  }
+  .st-install-actions .st-mini{
+    width: 100%;
+    justify-content: center;
   }
 }
 

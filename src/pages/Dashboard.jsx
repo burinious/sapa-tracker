@@ -5,6 +5,7 @@ import "./DashboardUpgrade.css";
 import DashboardHeader from "../components/dashboard/DashboardHeader";
 import DashboardControlBar from "../components/dashboard/DashboardControlBar";
 import SapaRiskMeter from "../components/dashboard/SapaRiskMeter";
+import AppDownloadBanner from "../components/dashboard/AppDownloadBanner";
 import QuickAddRow from "../components/dashboard/QuickAddRow";
 import StudentQuickLinks from "../components/dashboard/StudentQuickLinks";
 import PressureThisWeek from "../components/dashboard/PressureThisWeek";
@@ -314,6 +315,8 @@ export default function Dashboard() {
   return (
     <div className={`st-wrap st-theme-${dashboardTheme}`}>
       <div className="st-grid">
+        <AppDownloadBanner />
+
         <div className="st-col st-col-left">
           <div className="st-anim" style={{ "--d": "0.02s" }}>
             <DashboardHeader

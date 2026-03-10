@@ -11,13 +11,17 @@ export function addTransaction(uid, tx) {
   const amount = Number(tx.amount || 0);
   if (!amount || amount <= 0) throw new Error("Amount must be greater than 0");
   if (tx.type !== "income" && tx.type !== "expense") throw new Error("Type must be income or expense");
+  const categoryName = String(tx.categoryName || tx.category || "").trim();
+  if (!categoryName) throw new Error("Category is required");
   const delta = tx.type === "income" ? amount : -amount;
   const nextCash = Number(state.cashAtHand || 0) + delta;
 
   const id = (globalThis.crypto?.randomUUID?.() || String(Date.now()));
   const nextTx = {
     id, type: tx.type, amount,
-    categoryName: (tx.categoryName || "").trim(),
+    categoryName,
+    category: categoryName,
+    customCategory: String(tx.customCategory || "").trim(),
     note: (tx.note || "").trim(),
     dateISO: new Date().toISOString(),
     createdAtISO: new Date().toISOString(),

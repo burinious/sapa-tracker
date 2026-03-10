@@ -1,6 +1,21 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  IconButton,
+  InputAdornment,
+  Link,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useAuth } from "../context/AuthContext";
 import SapaLogo from "../components/brand/SapaLogo";
 import "../styles/app.css";
@@ -12,16 +27,47 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  const trimmedEmail = email.trim();
+  const hasPasswordLengthError = password.length > 0 && password.length < 6;
+  const hasConfirmMismatch = confirmPassword.length > 0 && password !== confirmPassword;
+
+  const canSubmit = useMemo(() => {
+    return Boolean(
+      !busy &&
+      !setupError &&
+      trimmedEmail &&
+      password.length >= 6 &&
+      confirmPassword.length > 0 &&
+      !hasConfirmMismatch
+    );
+  }, [busy, setupError, trimmedEmail, password.length, confirmPassword.length, hasConfirmMismatch]);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!email || !password) return toast.error("Email and password are required");
-    if (password.length < 6) return toast.error("Password must be at least 6 characters");
+
+    if (!trimmedEmail || !password || !confirmPassword) {
+      toast.error("Email, password, and confirm password are required");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
     setBusy(true);
     try {
-      await register(email.trim(), password, username.trim());
+      await register(trimmedEmail, password, username.trim());
       toast.success("Account created!");
       navigate("/dashboard");
     } catch (err) {
@@ -34,37 +80,124 @@ export default function Register() {
 
   return (
     <div className="auth-wrap">
-      <div className="card auth-card">
-        <div className="auth-brand-row">
-          <SapaLogo size={30} showWordmark className="auth-logo" />
-        </div>
-        <div className="page-title-row">
-          <h1 className="page-title">Create Account</h1>
-        </div>
-        <p className="small page-sub">Set up your Sapa Tracker</p>
-        {setupError ? (
-          <p className="note-warn">
-            Firebase setup error: {setupError}
-          </p>
-        ) : null}
+      <Container maxWidth="sm" disableGutters>
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            border: "1px solid",
+            borderColor: "rgba(123,75,255,.22)",
+            backgroundColor: "rgba(255,255,255,.92)",
+            boxShadow: "0 14px 30px rgba(10,22,58,.14)",
+          }}
+        >
+          <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+            <Stack spacing={2}>
+              <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
+                <SapaLogo size={30} showWordmark className="auth-logo" />
+              </Box>
 
-        <form onSubmit={handleSubmit} className="page-stack-md" style={{ marginTop: 12 }}>
-          <label className="small">Username</label>
-          <input className="input" value={username} onChange={(e) => setUsername(e.target.value)} />
+              <Box>
+                <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+                  Create Account
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Set up your SapaTracker profile
+                </Typography>
+              </Box>
 
-          <label className="small">Email</label>
-          <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              {setupError ? <Alert severity="warning">Firebase setup error: {setupError}</Alert> : null}
 
-          <label className="small">Password</label>
-          <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Box component="form" noValidate onSubmit={handleSubmit}>
+                <Stack spacing={2}>
+                  <TextField
+                    label="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    fullWidth
+                    autoComplete="username"
+                  />
 
-          <button className="btn" disabled={busy || !!setupError}>{busy ? "Creating..." : "Create account"}</button>
-        </form>
+                  <TextField
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    fullWidth
+                    required
+                    autoComplete="email"
+                  />
 
-        <p className="small page-sub" style={{ marginTop: 12 }}>
-          Already have an account? <Link to="/">Login</Link>
-        </p>
-      </div>
+                  <TextField
+                    label="Password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    fullWidth
+                    required
+                    autoComplete="new-password"
+                    error={hasPasswordLengthError}
+                    helperText={hasPasswordLengthError ? "Password must be at least 6 characters" : " "}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    label="Confirm Password"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    fullWidth
+                    required
+                    autoComplete="new-password"
+                    error={hasConfirmMismatch}
+                    helperText={hasConfirmMismatch ? "Passwords do not match" : " "}
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              onClick={() => setShowConfirmPassword((prev) => !prev)}
+                              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                            >
+                              {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
+                  />
+
+                  <Button type="submit" variant="contained" size="large" disabled={!canSubmit}>
+                    {busy ? "Creating..." : "Create account"}
+                  </Button>
+                </Stack>
+              </Box>
+
+              <Typography variant="body2" color="text.secondary">
+                Already have an account?{" "}
+                <Link component={RouterLink} to="/" underline="hover">
+                  Login
+                </Link>
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Container>
     </div>
   );
 }

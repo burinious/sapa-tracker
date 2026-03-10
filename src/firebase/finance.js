@@ -6,6 +6,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
+import { normalizeCategory, normalizeOptionalText } from "../constants/transactionCategories";
 
 /**
  * Adds a transaction and atomically updates user's cashAtHand.
@@ -23,6 +24,13 @@ export async function addTransactionAndUpdateCash(uid, payload) {
   if (type !== "income" && type !== "expense") {
     throw new Error("Type must be income or expense");
   }
+  const categoryName = normalizeCategory(type, payload.categoryName || payload.category);
+  if (!categoryName) throw new Error("Please choose a valid category");
+
+  const customCategory =
+    categoryName === "Other" ? normalizeOptionalText(payload.customCategory, 60) : "";
+  const note = normalizeOptionalText(payload.note, 200);
+  const title = normalizeOptionalText(payload.title, 80) || customCategory || categoryName || "Transaction";
 
   const delta = type === "income" ? amount : -amount;
 
@@ -45,13 +53,17 @@ export async function addTransactionAndUpdateCash(uid, payload) {
       type,
       amount,
       categoryId: payload.categoryId || "",
-      categoryName: payload.categoryName || "",
-      note: payload.note || "",
+      category: categoryName,
+      categoryName,
+      customCategory,
+      title,
+      note,
       date: payload.date instanceof Date
         ? payload.date.toISOString().slice(0, 10)
         : new Date().toISOString().slice(0, 10),
       dateAt: payload.date instanceof Date ? Timestamp.fromDate(payload.date) : Timestamp.now(),
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
   });
 }
